@@ -1,7 +1,7 @@
 <template>
   <div>
-    <aplayer autoplay
-    :music="music" :list="musiclist" ref="musicplayer" v-if="isGetDataComplete"/>
+    <aplayer
+      :music="music" preload="auto" :list="musiclist" ref="musicplayer" v-if="isGetDataComplete"/>
 
     <button @click="test">sdasda</button>
   </div>
@@ -19,6 +19,7 @@ export default {
   methods: {
     //设置监听器
     setEventListener: function() {
+      var self = this
       var audio = document.getElementsByTagName("audio")[0];
       console.log(audio);
       //seeked在跳跃操作完成时触发。
@@ -32,6 +33,7 @@ export default {
       //canplay在媒体数据已经有足够的数据（至少播放数帧）可供播放时触发
       audio.addEventListener("canplay", function() {
         console.log("canplay");
+        self.$refs.musicplayer.play()
       });
       //ended播放结束时触发。
       audio.addEventListener("ended", function() {
@@ -103,8 +105,12 @@ export default {
       this.music = arr[0];
       this.musiclist = arr;
       this.isGetDataComplete = true
-      this.player = this.$refs.musicplayer.$children;
-      this.setEventListener();
+      var self = this;
+      setTimeout(function () { 
+        self.player = self.$refs.musicplayer.$children;
+        self.setEventListener();
+       },500)
+      
     },
     test: function() {
       // console.log(this.getPlayRandom());
@@ -215,10 +221,6 @@ export default {
           self.$route.push("/");
         }
       })
-      .catch(function(error) {
-        console.log("请求错误" + error);
-        self.$route.push("/");
-      });
   }
 };
 </script>
