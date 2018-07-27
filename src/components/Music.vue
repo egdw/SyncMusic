@@ -1,7 +1,7 @@
 <template>
   <div>
-    <aplayer
-    :music="music" :list="musiclist" ref="musicplayer"/>
+    <aplayer autoplay
+    :music="music" :list="musiclist" ref="musicplayer" v-if="isGetDataComplete"/>
 
     <button @click="test">sdasda</button>
   </div>
@@ -11,6 +11,7 @@
 import Aplayer from "vue-aplayer";
 Aplayer.disableVersionBadge = true;
 import axios from "axios";
+// import {addStatusOne} from '@/assets/js/databaseutils.js'
 export default {
   components: {
     Aplayer
@@ -99,13 +100,22 @@ export default {
     },
     //初始化数据
     initData: function(arr) {
-      this.music=arr[0]
-      this.musiclist = arr
+      this.music = arr[0];
+      this.musiclist = arr;
+      this.isGetDataComplete = true
       this.player = this.$refs.musicplayer.$children;
       this.setEventListener();
     },
     test: function() {
-      console.log(this.getPlayRandom());
+      // console.log(this.getPlayRandom());
+      // Aplayer.play()
+      // this.player[2]._props.playIndex =
+      // addStatusOne("test","id","12312")
+      console.log(this.$refs.musicplayer)
+    },
+    //设置切换的音乐index
+    setPlayIndex(index) {
+      this.$refs.musicplayer.onSelectSong(this.musiclist[index]);
     },
     //得到当前播放的索引
     getPlayIndex: function() {
@@ -138,21 +148,9 @@ export default {
   data() {
     return {
       songid: "",
-      musiclist: [
-        {
-          title: "secret base~君がくれたもの~",
-          artist: "Silent Siren",
-          src:
-            "https://api.imjad.cn/cloudmusic/?type=song&id=420513158&raw=true",
-          pic: "https://moeplayer.b0.upaiyun.com/aplayer/secretbase.jpg"
-        }
-      ],
-      music: {
-        title: "secret base~君がくれたもの~",
-        artist: "Silent Siren",
-        src: "https://api.imjad.cn/cloudmusic/?type=song&id=420513158&raw=true",
-        pic: "https://moeplayer.b0.upaiyun.com/aplayer/secretbase.jpg"
-      }
+      musiclist: null,
+      music: null,
+      isGetDataComplete:false
     };
   },
   mounted() {
@@ -175,15 +173,6 @@ export default {
       })
       .then(function(response) {
         console.log(response.data);
-        //   musiclist: [
-        //   {
-        //     title: "secret base~君がくれたもの~",
-        //     artist: "Silent Siren",
-        //     src:
-        //       "https://api.imjad.cn/cloudmusic/?type=song&id=420513158&raw=true",
-        //     pic: "https://moeplayer.b0.upaiyun.com/aplayer/secretbase.jpg"
-        //   }
-        // ],
         var data = response.data;
         var temp = 0;
         if (data.code == "200") {
@@ -219,7 +208,7 @@ export default {
             temp++;
           });
           // console.log(arr);
-          
+
           self.initData(arr);
         } else {
           alert("歌单不存在");
