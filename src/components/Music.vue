@@ -13,9 +13,7 @@ Aplayer.disableVersionBadge = true;
 import axios from "axios";
 export default {
   components: {
-    Aplayer,
-    player: null,
-    playindex: ""
+    Aplayer
   },
   methods: {
     //设置监听器
@@ -99,11 +97,42 @@ export default {
         console.log("timeupdate");
       });
     },
-    test: function() {
-      alert(this.getPlayIndex());
+    //初始化数据
+    initData: function(arr) {
+      this.music=arr[0]
+      this.musiclist = arr
+      this.player = this.$refs.musicplayer.$children;
+      this.setEventListener();
     },
+    test: function() {
+      console.log(this.getPlayRandom());
+    },
+    //得到当前播放的索引
     getPlayIndex: function() {
       return this.player[2]._props.playIndex;
+    },
+    //得到当前播放时间
+    getPlayTime: function() {
+      var arr = new Array();
+      //总时长
+      arr[0] = this.player[1]._props.stat.duration;
+      //加载时长
+      arr[1] = this.player[1]._props.stat.playedTime;
+      //播放时长
+      arr[2] = this.player[1]._props.stat.playedTime;
+      return arr;
+    },
+    //获取播放模式 循环播放 暂停播放 单曲循环
+    getPlayMode: function() {
+      var internalRepeat = this.$refs.musicplayer.internalRepeat;
+      console.log(internalRepeat);
+      return internalRepeat;
+    },
+    //获取是否是随机播放(true)
+    getPlayRandom: function() {
+      var internalShuffle = this.$refs.musicplayer.internalShuffle;
+      console.log(internalShuffle);
+      return internalShuffle;
     }
   },
   data() {
@@ -145,12 +174,53 @@ export default {
         }
       })
       .then(function(response) {
-        console.log();
+        console.log(response.data);
+        //   musiclist: [
+        //   {
+        //     title: "secret base~君がくれたもの~",
+        //     artist: "Silent Siren",
+        //     src:
+        //       "https://api.imjad.cn/cloudmusic/?type=song&id=420513158&raw=true",
+        //     pic: "https://moeplayer.b0.upaiyun.com/aplayer/secretbase.jpg"
+        //   }
+        // ],
         var data = response.data;
+        var temp = 0;
         if (data.code == "200") {
           //进行数据处理
-          self.player = self.$refs.musicplayer.$children;
-          self.setEventListener();
+          //获取到播放列表
+          var playlist = data.playlist;
+          var tracks = playlist.tracks;
+          var arr = new Array();
+          tracks.forEach(element => {
+            //歌曲标题
+            var name = element.name;
+            //歌曲id
+            var id = element.id;
+            //作家
+            var artist = "未知";
+            if (element.ar[0] != null && element.ar[0].name != null) {
+              artist = element.ar[0].name;
+            }
+            //封面
+            var pic_img = "";
+            if (element.al != null && element.al.picUrl != null) {
+              pic_img = element.al.picUrl;
+            }
+            //播放地址
+            var url =
+              "https://api.imjad.cn/cloudmusic/?type=song&raw=true&id=" + id;
+            arr[temp] = {
+              title: name,
+              artist: artist,
+              src: url,
+              pic: pic_img
+            };
+            temp++;
+          });
+          // console.log(arr);
+          
+          self.initData(arr);
         } else {
           alert("歌单不存在");
           self.$route.push("/");
