@@ -36,10 +36,12 @@ export default {
       //seeked在跳跃操作完成时触发。
       audio.addEventListener("seekd", function() {
         console.log("发生跳跃操作");
+        self.sendJson();
       });
       //pause在暂停的时候触发
       audio.addEventListener("pause", function() {
         console.log("pause");
+        self.sendJson();
       });
       //canplay在媒体数据已经有足够的数据（至少播放数帧）可供播放时触发
       audio.addEventListener("canplay", function() {
@@ -49,6 +51,10 @@ export default {
       //ended播放结束时触发。
       audio.addEventListener("ended", function() {
         console.log("ended");
+        if (self.random == "") {
+          //说明是普通成员
+          audio.pause();
+        }
       });
       //error 在发生错误时触发。
       audio.addEventListener("error", function() {
@@ -57,10 +63,7 @@ export default {
       //play在媒体回放被暂停后再次开始时触发。
       audio.addEventListener("play", function() {
         console.log("play");
-      });
-      //pause在暂停的时候触发
-      audio.addEventListener("pause", function() {
-        console.log("pause");
+        self.sendJson();
       });
       //stalled在尝试获取媒体数据，但数据不可用时触发
       audio.addEventListener("stalled", function() {
@@ -269,28 +272,55 @@ export default {
     //修改json数据
     sendJson: function() {
       var self = this;
-      axios
-        .put("https://api.myjson.com/bins/s7wgy", {
-          params: {
-            data:
-              '{"sync":{"listid":"937224028","time":"","index":"","mode":"","status":"","updatetime":"","random":""}}'
-          }
-        })
-        .then(function(response) {
-          console.log(response.data);
-        })
-        .catch(function(error) {});
+      var pre_event_time = self.pre_event_time;
+      //获取上次事件触发的时间
+      if (pre_event_time == "") {
+        //说明是第一次触发事件
+        console.log("事件已经被触发")
+      } else {
+        axios
+          .put("https://api.myjson.com/bins/s7wgy", {
+            params: {
+              data:
+                '{"sync":{"listid":"937224028","time":"","index":"","mode":"","status":"","updatetime":"","random":""}}'
+            }
+          })
+          .then(function(response) {
+            console.log(response.data);
+          })
+          .catch(function(error) {});
+      }
     }
   },
   data() {
+    // '{"sync":{"listid":"","time":"","index":"","mode":"","status":"","updatetime":"","random":""}}'
+
     return {
+      //当前歌曲id
       songid: "",
+      //当前音乐列表
       musiclist: null,
+      //当前音乐
       music: null,
+      //获取数据是否完成
       isGetDataComplete: false,
+      //控制器样式
       controllerstyle: "not-hidden-controller",
+      //是否是刚开屏
       firstopen: true,
-      configurl: "https://api.myjson.com/bins/s7wgy"
+      //配置文件地址
+      configurl: "https://api.myjson.com/bins/s7wgy",
+      //播放进度
+      playtime: "",
+      //播放索引
+      playindex: "",
+      //播放模式
+      playmode: "",
+      //播放状态
+      playstatus: "",
+      //随机码
+      random: "",
+      pre_event_time: ""
     };
   },
   mounted() {
