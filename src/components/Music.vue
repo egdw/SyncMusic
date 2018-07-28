@@ -116,6 +116,7 @@ export default {
     },
     //初始化数据
     initData: function(arr) {
+      var self = this;
       this.music = arr[0];
       this.musiclist = arr;
       this.isGetDataComplete = true;
@@ -130,6 +131,11 @@ export default {
         audioAutoPlay();
       });
       this.firstopen = false;
+      this.setInterval = setInterval(function() {
+        console.log("定时器启动")
+        self.getJson();
+      }, 10 * 1000);
+       console.log("定时器启动2")
       setTimeout(function() {
         self.player = self.$refs.musicplayer.$children;
         self.setEventListener();
@@ -140,8 +146,11 @@ export default {
       // Aplayer.play()
       // this.player[2]._props.playIndex =
       // addStatusOne("test","id","12312")
-      this.sendJson();
-      this.getJson();
+      this.getJson()
+    },
+    setPlayTime(time) {
+      var audio = document.getElementsByTagName("audio")[0];
+      audio.currentTime = time;
     },
     //设置切换的音乐index
     setPlayIndex(index) {
@@ -167,6 +176,9 @@ export default {
       var internalRepeat = this.$refs.musicplayer.internalRepeat;
       console.log(internalRepeat);
       return internalRepeat;
+    },
+    getPlayStatus: function() {
+      return this.$refs.musicplayer.isPlaying;
     },
     //获取是否是随机播放(true)
     getPlayRandom: function() {
@@ -262,10 +274,133 @@ export default {
     },
     //获取返回的json数据
     getJson: function() {
+      console.log("准备获取数据")
+      var self = this
+      if(self.firstopen){
+          window.clearInterval(self.setInterval)
+      }
       axios
         .get("https://api.myjson.com/bins/s7wgy", {})
         .then(function(response) {
-          console.log(response.data);
+          var data = response.data
+          data = eval("(" + data.params.data + ")").sync;
+          console.log(data)
+          console.log(response)
+          if (data.updatetime != undefined) {
+            console.log("数据正确")
+            //说明数据没有初始化
+             //说明当前播放的歌曲没有发生变化
+            var othertime = parseFloat(data.time);
+            //获取到总时长
+            var totaltime = self.getPlayTime()[1];
+            var nowtime = self.getPlayTime()[2];
+            //获取上一个用户更新前触发的时间
+            var updatetime = parseFloat(data.updatetime);
+            //大概计算出网络传输花了多长时间(秒)
+            var usingsecond = (new Date().getTime() - updatetime) / 1000;
+            //获取修改用户当前应该播放的时间
+            var realtime = othertime + usingsecond;
+            if (
+              data.index == self.playindex &&
+              self.playstatus == data.status
+            ) {
+              if (realtime > totaltime) {
+                //说明已经播放完了.暂停当前.等待下次更新新的切换歌曲
+                self.$refs.musicplayer.pause();
+              } else {
+                //说明还可以播放
+                //如果误差差五秒以内不进行跳转
+                if (Math.abs(realtime - nowtime) >= 5) {
+                  self.setPlayTime(realtime);
+                }
+              }
+            } else {
+              //如果是播放歌曲不同的话
+              if (data.index != self.playindex) {
+                //切换到新的歌曲
+                self.setPlayIndex(data.index);
+                self.setPlayTime(data.realtime);
+              }
+              //如果暂停了.那么我也暂停.如果播放了.我也从可以播放的地方开始播放
+              if (self.playstatus != data.status) {
+                self.setPlayTime(realtime);
+                if (data.status == "true") {
+                  self.$refs.musicplayer.play();
+                } else {
+                  self.$refs.musicplayer.pause();
+                }
+                return;
+              }
+              //说明不相同了.
+              //更改数据
+              axios
+                .put("https://api.myjson.com/bins/s7wgy", {
+                  params: {
+                    data:
+                      '{"sync":{"listid":"' +
+                      self.songid +
+                      '","time":"' +
+                      self.getPlayTime()[2] +
+                      '","index":"' +
+                      self.getPlayIndex() +
+                      '","mode":"' +
+                      self.getPlayMode() +
+                      '","status":"' +
+                      self.getPlayStatus +
+                      '","updatetime":"' +
+                      new Date().getTime() +
+                      '"}}'
+                  }
+                })
+                .then(function(response) {
+                  console.log(response.data);
+                })
+                .catch(function(error) {});
+            }
+          }else {
+            //初始化数据
+            console.log("数据错误")
+            var t = '{"sync":{"listid":"' +
+                    self.songid +
+                    '","time":"' +
+                    self.getPlayTime()[2] +
+                    '","index":"' +
+                    self.getPlayIndex() +
+                    '","mode":"' +
+                    self.getPlayMode() +
+                    '","status":"' +
+                    self.getPlayStatus() +
+                    '","updatetime":"' +
+                    new Date().getTime() +
+                    '"}}'
+
+            console.log(t)
+            axios
+              .put("https://api.myjson.com/bins/s7wgy", {
+                params: {
+                  data:
+                    '{"sync":{"listid":"' +
+                    self.songid +
+                    '","time":"' +
+                    self.getPlayTime()[2] +
+                    '","index":"' +
+                    self.getPlayIndex() +
+                    '","mode":"' +
+                    self.getPlayMode() +
+                    '","status":"' +
+                    self.getPlayStatus() +
+                    '","updatetime":"' +
+                    new Date().getTime() +
+                    '"}}'
+                }
+              })
+              .then(function(response) {
+                console.log(response.data);
+              })
+              .catch(function(error) {
+                console.log("修改过的数据:"+error)
+              });
+          }
         })
         .catch(function(error) {});
     },
@@ -274,22 +409,20 @@ export default {
       var self = this;
       var pre_event_time = self.pre_event_time;
       //获取上次事件触发的时间
-      if (pre_event_time == "") {
-        //说明是第一次触发事件
-        console.log("事件已经被触发")
-      } else {
-        axios
-          .put("https://api.myjson.com/bins/s7wgy", {
-            params: {
-              data:
-                '{"sync":{"listid":"937224028","time":"","index":"","mode":"","status":"","updatetime":"","random":""}}'
-            }
-          })
-          .then(function(response) {
-            console.log(response.data);
-          })
-          .catch(function(error) {});
-      }
+      self.playtime = self.getPlayTime()[2];
+      self.playindex = self.getPlayIndex();
+      self.playmode = self.getPlayMode();
+      self.playstatus = self.getPlayStatus();
+      console.log(self.playtime);
+      //说明是第一次触发事件
+      console.log("事件已经被触发");
+      //获取到当前的时间戳
+      var currenttime = new Date().getTime();
+      self.pre_event_time = currenttime;
+    },
+    //发送当前的状态
+    sendCurrentJson: function() {
+      this.getJson();
     }
   },
   data() {
@@ -320,19 +453,18 @@ export default {
       playstatus: "",
       //随机码
       random: "",
-      pre_event_time: ""
+      pre_event_time: 0
     };
   },
   mounted() {
     //防止某些浏览器无法自动播放音乐.取消监听事件
-    document.addEventListener("touchstart", function() {
+    document.addEventListener("touchend", function() {
       function audioAutoPlay() {
         var musicEle0 = document.getElementById("emitaudio");
         musicEle0.play();
       }
       audioAutoPlay();
     });
-
     // 创建房间
     // this.createJson()
   }
