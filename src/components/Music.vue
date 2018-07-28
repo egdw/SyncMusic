@@ -132,10 +132,10 @@ export default {
       });
       this.firstopen = false;
       this.setInterval = setInterval(function() {
-        console.log("定时器启动")
+        console.log("定时器启动");
         self.getJson();
       }, 10 * 1000);
-       console.log("定时器启动2")
+      console.log("定时器启动2");
       setTimeout(function() {
         self.player = self.$refs.musicplayer.$children;
         self.setEventListener();
@@ -146,7 +146,7 @@ export default {
       // Aplayer.play()
       // this.player[2]._props.playIndex =
       // addStatusOne("test","id","12312")
-      this.getJson()
+      this.getJson();
     },
     setPlayTime(time) {
       var audio = document.getElementsByTagName("audio")[0];
@@ -274,22 +274,22 @@ export default {
     },
     //获取返回的json数据
     getJson: function() {
-      console.log("准备获取数据")
-      var self = this
-      if(self.firstopen){
-          window.clearInterval(self.setInterval)
-      }
+      console.log("准备获取数据");
+      var self = this;
+      // if(self.firstopen){
+      //     window.clearInterval(self.setInterval)
+      // }
       axios
         .get("https://api.myjson.com/bins/s7wgy", {})
         .then(function(response) {
-          var data = response.data
+          var data = response.data;
           data = eval("(" + data.params.data + ")").sync;
-          console.log(data)
-          console.log(response)
+          console.log(data);
+          console.log(response);
           if (data.updatetime != undefined) {
-            console.log("数据正确")
+            console.log("数据正确");
             //说明数据没有初始化
-             //说明当前播放的歌曲没有发生变化
+            //说明当前播放的歌曲没有发生变化
             var othertime = parseFloat(data.time);
             //获取到总时长
             var totaltime = self.getPlayTime()[1];
@@ -318,8 +318,15 @@ export default {
               //如果是播放歌曲不同的话
               if (data.index != self.playindex) {
                 //切换到新的歌曲
-                self.setPlayIndex(data.index);
-                self.setPlayTime(data.realtime);
+                if (
+                  (data.index == 0 && self.playindex == -1) ||
+                  (data.index == -1 && self.playindex == 0)
+                ) {
+                  //如果是这种情况就说明是一样的歌曲
+                } else {
+                  self.setPlayIndex(data.index);
+                  self.setPlayTime(data.realtime);
+                }
               }
               //如果暂停了.那么我也暂停.如果播放了.我也从可以播放的地方开始播放
               if (self.playstatus != data.status) {
@@ -357,24 +364,25 @@ export default {
                 })
                 .catch(function(error) {});
             }
-          }else {
+          } else {
             //初始化数据
-            console.log("数据错误")
-            var t = '{"sync":{"listid":"' +
-                    self.songid +
-                    '","time":"' +
-                    self.getPlayTime()[2] +
-                    '","index":"' +
-                    self.getPlayIndex() +
-                    '","mode":"' +
-                    self.getPlayMode() +
-                    '","status":"' +
-                    self.getPlayStatus() +
-                    '","updatetime":"' +
-                    new Date().getTime() +
-                    '"}}'
+            console.log("数据错误");
+            var t =
+              '{"sync":{"listid":"' +
+              self.songid +
+              '","time":"' +
+              self.getPlayTime()[2] +
+              '","index":"' +
+              self.getPlayIndex() +
+              '","mode":"' +
+              self.getPlayMode() +
+              '","status":"' +
+              self.getPlayStatus() +
+              '","updatetime":"' +
+              new Date().getTime() +
+              '"}}';
 
-            console.log(t)
+            console.log(t);
             axios
               .put("https://api.myjson.com/bins/s7wgy", {
                 params: {
@@ -398,7 +406,7 @@ export default {
                 console.log(response.data);
               })
               .catch(function(error) {
-                console.log("修改过的数据:"+error)
+                console.log("修改过的数据:" + error);
               });
           }
         })
