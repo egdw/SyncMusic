@@ -12,7 +12,7 @@ import axios from 'axios';
 export default {
   data() {
     return {
-      songlistid: "",
+      songlistid: "937224028",
     };
   },
   methods:{
@@ -23,7 +23,7 @@ export default {
         if(this.songlistid.length<=6){
           alert("不符合规范")
         }else{
-          self.$router.push("/Music");
+          this.$router.push("/Music/"+this.songlistid);
         }
       }
     }

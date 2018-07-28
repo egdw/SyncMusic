@@ -131,11 +131,11 @@ export default {
         audioAutoPlay();
       });
       this.firstopen = false;
-      this.setInterval = setInterval(function() {
+      window.intervalObj = setInterval(function() {
         console.log("定时器启动");
         self.getJson();
       }, 5 * 1000);
-      setTimeout(function() {
+      setTimeout(function() {/*  */
         self.player = self.$refs.musicplayer.$children;
         self.setEventListener();
       }, 500);
@@ -455,6 +455,12 @@ export default {
     });
     // 创建房间
     // this.createJson()
+  },
+  beforeDestroy(){
+    //取消所有的监听事件
+    this.cancleEventListener()
+    //取消定时器
+    clearInterval(window.intervalObj)
   }
 };
 </script>
