@@ -7,12 +7,15 @@
       </audio>
     <button @click="test">sdasda</button>
     <div id="HelloDiv"  v-if="firstopen">
-      <div id="agereeButton" @click="agree">
-        <span>开始使用</span>
+      <!-- <div>
         <p>
           您的配置信息地址为:
         </p>
+        <input type="text" readonly :value="configurl" style="width:100%;height:2rem"/>
         <h1>{{configurl}}</h1>
+      </div> -->
+      <div id="agereeButton" @click="agree">
+        <span>开始使用</span>
       </div>
     </div>
   </div>
@@ -22,6 +25,7 @@
 import Aplayer from "vue-aplayer";
 Aplayer.disableVersionBadge = true;
 import axios from "axios";
+import swal from "sweetalert2";
 // import {addStatusOne} from '@/assets/js/databaseutils.js'
 export default {
   components: {
@@ -120,7 +124,6 @@ export default {
       this.music = arr[0];
       this.musiclist = arr;
       this.isGetDataComplete = true;
-      var self = this;
       //隐藏开屏
       //防止某些浏览器无法自动播放音乐.取消监听事件
       document.removeEventListener("touchstart", function() {
@@ -130,15 +133,75 @@ export default {
         }
         audioAutoPlay();
       });
-      this.firstopen = false;
-      window.intervalObj = setInterval(function() {
-        console.log("定时器启动");
-        self.getJson();
-      }, 5 * 1000);
-      setTimeout(function() {/*  */
-        self.player = self.$refs.musicplayer.$children;
-        self.setEventListener();
-      }, 500);
+
+      swal({
+        title: "开房还是加入?",
+        text: "邀请另一半或加入另一半?",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "我要加入",
+        cancelButtonText: "我是房主",
+        confirmButtonClass: "btn btn-success",
+        cancelButtonClass: "btn btn-danger",
+        buttonsStyling: false
+      }).then(
+        function() {
+          swal({
+            title: "请输入链接地址",
+            text: "请联系另一半提供地址",
+            input: "text",
+            showCancelButton: true,
+            inputValidator: function(value) {
+              return new Promise(function(resolve, reject) {
+                if (value) {
+                  resolve();
+                } else {
+                  reject("你需要输入一些东西");
+                }
+              });
+            }
+          }).then(function(result) {
+            axios
+              .get(result, {})
+              .then(function(response) {
+                var data = response.data;
+                data = eval("(" + data.params.data + ")").sync;
+                if (data.listid != undefined) {
+                  swal({
+                    type: "success",
+                    html: "添加成功"
+                  });
+                  self.configurl = result;
+                  self.firstopen = false;
+                } else {
+                  swal({
+                    type: "error",
+                    html: "添加失败"
+                  });
+                  self.firstopen = true;
+                }
+              })
+              .catch(function(error) {});
+          });
+        },
+        function(dismiss) {
+          // dismiss的值可以是'cancel', 'overlay',
+          // 'close', 'timer'
+          if (dismiss === "cancel") {
+            self.createJson();
+          }
+        }
+      );
+
+      // window.intervalObj = setInterval(function() {
+      //   console.log("定时器启动");
+      //   self.getJson();
+      // }, 5 * 1000);
+      // setTimeout(function() {/*  */
+      //   self.player = self.$refs.musicplayer.$children;
+      //   self.setEventListener();
+      // }, 500);
     },
     test: function() {
       // console.log(this.getPlayRandom());
@@ -197,6 +260,10 @@ export default {
       //初始化数据
       //可以开房了
       var self = this;
+      if(self.musiclist!=null){
+        self.initData()
+        return
+      }
       axios
         .get("https://api.imjad.cn/cloudmusic/", {
           params: {
@@ -256,19 +323,19 @@ export default {
         .post("https://api.myjson.com/bins", {
           params: {
             data:
-                  '{"sync":{"listid":"' +
-                  self.songid +
-                  '","time":"' +
-                  "0" +
-                  '","index":"' +
-                  "-1" +
-                  '","mode":"' +
-                  "none" +
-                  '","status":"' +
-                  "true" +
-                  '","updatetime":"' +
-                  new Date().getTime() +
-                  '"}}'
+              '{"sync":{"listid":"' +
+              self.songid +
+              '","time":"' +
+              "0" +
+              '","index":"' +
+              "-1" +
+              '","mode":"' +
+              "none" +
+              '","status":"' +
+              "true" +
+              '","updatetime":"' +
+              new Date().getTime() +
+              '"}}'
           }
         })
         .then(function(response) {
@@ -277,6 +344,7 @@ export default {
             //获取的当前房间的配置信息
             uri = response.data.uri;
             self.configurl = uri;
+            swal("创建成功!请发送下面的地址给另一半", uri, "success");
           }
         })
         .catch(function(error) {
@@ -291,7 +359,7 @@ export default {
       //     window.clearInterval(self.setInterval)
       // }
       axios
-        .get("https://api.myjson.com/bins/s7wgy", {})
+        .get(self.configurl, {})
         .then(function(response) {
           var data = response.data;
           data = eval("(" + data.params.data + ")").sync;
@@ -300,23 +368,23 @@ export default {
             //说明数据没有初始化
             //说明当前播放的歌曲没有发生变化
             var othertime = parseFloat(data.time);
-            console.log("服务器获取的时间为:"+othertime)
+            // console.log("服务器获取的时间为:"+othertime)
             //获取到总时长
             var totaltime = self.getPlayTime()[0];
-            console.log("歌曲的总时长为:"+totaltime)
+            // console.log("歌曲的总时长为:"+totaltime)
             var nowtime = self.getPlayTime()[2];
-            console.log("正在播放的时间为:"+nowtime)
+            // console.log("正在播放的时间为:"+nowtime)
             //获取上一个用户更新前触发的时间
             var updatetime = parseFloat(data.updatetime);
-            console.log("操作的时间为:"+updatetime)
+            // console.log("操作的时间为:"+updatetime)
             //大概计算出网络传输花了多长时间(秒)
-            var ctime = new Date().getTime()
-            console.log("当期ctime:"+ctime)
+            var ctime = new Date().getTime();
+            // console.log("当期ctime:"+ctime)
             var usingsecond = (new Date().getTime() - updatetime) / 1000;
-            console.log("网络运输花费时间为:"+usingsecond)
+            // console.log("网络运输花费时间为:"+usingsecond)
             //获取修改用户当前应该播放的时间
             var realtime = othertime + usingsecond;
-            console.log("真实的时间为 :"+realtime)
+            // console.log("真实的时间为 :"+realtime)
             if (
               data.index == self.playindex ||
               ((data.index == 0 && self.playindex == -1) ||
@@ -335,7 +403,9 @@ export default {
                 }
               }
               //如果暂停了.那么我也暂停.如果播放了.我也从可以播放的地方开始播放
-              console.log("状态是否想同:"+self.getPlayStatus() != data.status)
+              console.log(
+                "状态是否想同:" + self.getPlayStatus() != data.status
+              );
               if (self.getPlayStatus() != data.status) {
                 self.setPlayTime(realtime);
                 if (data.status == "true") {
@@ -358,7 +428,7 @@ export default {
               //更改数据
             }
           }
-          sendJson()
+          sendJson();
         })
         .catch(function(error) {});
     },
@@ -383,7 +453,7 @@ export default {
         if (time >= 3) {
           self.pre_event_time = currenttime;
           axios
-            .put("https://api.myjson.com/bins/s7wgy", {
+            .put(self.configurl, {
               params: {
                 data:
                   '{"sync":{"listid":"' +
@@ -414,8 +484,6 @@ export default {
     }
   },
   data() {
-    // '{"sync":{"listid":"","time":"","index":"","mode":"","status":"","updatetime":"","random":""}}'
-
     return {
       //当前歌曲id
       songid: "",
@@ -426,7 +494,7 @@ export default {
       //获取数据是否完成
       isGetDataComplete: false,
       //控制器样式
-      controllerstyle: "not-hidden-controller",
+      controllerstyle: "hidden-controller",
       //是否是刚开屏
       firstopen: true,
       //配置文件地址
@@ -440,7 +508,7 @@ export default {
       //播放状态
       playstatus: "",
       //随机码
-      random: "",
+      random: "123",
       pre_event_time: 0
     };
   },
@@ -456,11 +524,11 @@ export default {
     // 创建房间
     // this.createJson()
   },
-  beforeDestroy(){
+  beforeDestroy() {
     //取消所有的监听事件
-    this.cancleEventListener()
+    this.cancleEventListener();
     //取消定时器
-    clearInterval(window.intervalObj)
+    clearInterval(window.intervalObj);
   }
 };
 </script>
@@ -468,11 +536,18 @@ export default {
 <style lang="stylus">
 #HelloDiv {
   position: fixed;
+  color: white;
   left: 0;
   top: 0;
   bottom: 0;
   right: 0;
-  background-color: red;
+  background-color: black;
+
+  #agereeButton {
+    font-size: 2rem;
+    margin-top: 30rem;
+    text-align: center;
+  }
 }
 
 .hidden-controller {

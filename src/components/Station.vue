@@ -8,26 +8,36 @@
 </template>
 
 <script type="text/ecmascript-6">
-import axios from 'axios';
+import axios from "axios";
+import swal from "sweetalert2";
 export default {
   data() {
     return {
-      songlistid: "937224028",
+      songlistid: "937224028"
     };
   },
-  methods:{
-    openroom:function () { 
-      if(this.songlistid == ''){
-        alert("不能为空")
-      }else{
-        if(this.songlistid.length<=6){
-          alert("不符合规范")
-        }else{
-          this.$router.push("/Music/"+this.songlistid);
+  methods: {
+    openroom: function() {
+      if (this.songlistid == "") {
+        swal({
+          title: "错误！",
+          text: "不能为空!",
+          type: "error",
+          confirmButtonText: "重新输入"
+        });
+      } else {
+        if (this.songlistid.length <= 6) {
+         swal({
+          title: "错误！",
+          text: "不符合规范!",
+          type: "error",
+          confirmButtonText: "重新输入"
+        });
+        } else {
+          this.$router.push("/Music/" + this.songlistid);
         }
       }
     }
-
   }
 };
 </script>
