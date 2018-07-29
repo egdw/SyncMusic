@@ -7,13 +7,6 @@
       </audio>
     <button @click="test">sdasda</button>
     <div id="HelloDiv"  v-if="firstopen">
-      <!-- <div>
-        <p>
-          您的配置信息地址为:
-        </p>
-        <input type="text" readonly :value="configurl" style="width:100%;height:2rem"/>
-        <h1>{{configurl}}</h1>
-      </div> -->
       <div id="agereeButton" @click="agree">
         <span>开始使用</span>
       </div>
@@ -133,7 +126,6 @@ export default {
         }
         audioAutoPlay();
       });
-
       swal({
         title: "开房还是加入?",
         text: "邀请另一半或加入另一半?",
@@ -145,8 +137,8 @@ export default {
         confirmButtonClass: "btn btn-success",
         cancelButtonClass: "btn btn-danger",
         buttonsStyling: false
-      }).then(
-        function() {
+      }).then(function(isConfirm) {
+        if (isConfirm.dismiss != 'cancel') {
           swal({
             title: "请输入链接地址",
             text: "请联系另一半提供地址",
@@ -162,17 +154,19 @@ export default {
               });
             }
           }).then(function(result) {
+            console.log(result)
             axios
-              .get(result, {})
+              .get(result.value, {})
               .then(function(response) {
                 var data = response.data;
                 data = eval("(" + data.params.data + ")").sync;
+                console.log(data)
                 if (data.listid != undefined) {
                   swal({
                     type: "success",
                     html: "添加成功"
                   });
-                  self.configurl = result;
+                  self.configurl = result.value;
                   self.firstopen = false;
                 } else {
                   swal({
@@ -184,24 +178,21 @@ export default {
               })
               .catch(function(error) {});
           });
-        },
-        function(dismiss) {
-          // dismiss的值可以是'cancel', 'overlay',
-          // 'close', 'timer'
-          if (dismiss === "cancel") {
-            self.createJson();
-          }
+        } else {
+          console.log("点击了取消按钮")
+          self.createJson();
+          
         }
-      );
+      });
 
-      // window.intervalObj = setInterval(function() {
-      //   console.log("定时器启动");
-      //   self.getJson();
-      // }, 5 * 1000);
-      // setTimeout(function() {/*  */
-      //   self.player = self.$refs.musicplayer.$children;
-      //   self.setEventListener();
-      // }, 500);
+      window.intervalObj = setInterval(function() {
+        console.log("定时器启动");
+        self.getJson();
+      }, 5 * 1000);
+      setTimeout(function() {/*  */
+        self.player = self.$refs.musicplayer.$children;
+        self.setEventListener();
+      }, 500);
     },
     test: function() {
       // console.log(this.getPlayRandom());
@@ -260,9 +251,9 @@ export default {
       //初始化数据
       //可以开房了
       var self = this;
-      if(self.musiclist!=null){
-        self.initData()
-        return
+      if (self.musiclist != null) {
+        self.initData();
+        return;
       }
       axios
         .get("https://api.imjad.cn/cloudmusic/", {
@@ -279,6 +270,7 @@ export default {
             //进行数据处理
             //获取到播放列表
             var playlist = data.playlist;
+
             var tracks = playlist.tracks;
             var arr = new Array();
             tracks.forEach(element => {
@@ -342,9 +334,10 @@ export default {
           //https://api.myjson.com/bins/s7wgy
           if (response.data != null && response.data.uri != null) {
             //获取的当前房间的配置信息
-            uri = response.data.uri;
+            var uri = response.data.uri;
             self.configurl = uri;
             swal("创建成功!请发送下面的地址给另一半", uri, "success");
+            self.firstopen = false;
           }
         })
         .catch(function(error) {
@@ -355,9 +348,7 @@ export default {
     getJson: function() {
       console.log("准备获取数据");
       var self = this;
-      // if(self.firstopen){
-      //     window.clearInterval(self.setInterval)
-      // }
+      console.log(self.configurl)
       axios
         .get(self.configurl, {})
         .then(function(response) {
