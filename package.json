@@ -10,7 +10,8 @@
     "e2e": "node test/e2e/runner.js",
     "test": "npm run e2e",
     "build": "node build/build.js",
-    "electron_dev": "npm run build && electron build/.electron.js"
+    "electron_dev": "npm run build && electron build/.electron.js",
+    "electron_build": "electron-packager ./ AGCAVCTool --platform=win32  --arch=x64 --electron-version=1.7.5 --out=../测试/exe版 --overwrit"
   },
   "dependencies": {
     "hls.js": "^0.10.1",
