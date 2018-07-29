@@ -29,91 +29,41 @@ export default {
     setEventListener: function() {
       var self = this;
       var audio = document.getElementsByTagName("audio")[0];
-      console.log(audio);
       //seeked在跳跃操作完成时触发。
-      audio.addEventListener("seekd", function() {
-        console.log("发生跳跃操作");
-        self.sendJson();
-      });
+      audio.addEventListener("seekd", self.sendJson);
       //pause在暂停的时候触发
-      audio.addEventListener("pause", function() {
-        console.log("pause");
-        self.sendJson();
-      });
+      audio.addEventListener("pause", self.sendJson);
       //canplay在媒体数据已经有足够的数据（至少播放数帧）可供播放时触发
-      audio.addEventListener("canplay", function() {
-        console.log("canplay");
-        self.$refs.musicplayer.play();
-      });
-      //ended播放结束时触发。
-      audio.addEventListener("ended", function() {
-        console.log("ended");
-        if (self.random == "") {
-          //说明是普通成员
-          audio.pause();
-        }
-      });
-      //error 在发生错误时触发。
-      audio.addEventListener("error", function() {
-        console.log("error");
-      });
+      audio.addEventListener("canplay", self.setplay);
       //play在媒体回放被暂停后再次开始时触发。
-      audio.addEventListener("play", function() {
-        console.log("play");
-        self.sendJson();
-      });
-      //stalled在尝试获取媒体数据，但数据不可用时触发
-      audio.addEventListener("stalled", function() {
-        console.log("stalled");
-      });
-      //timeupdate元素的currentTime属性表示的时间已经改变。
-      audio.addEventListener("timeupdate", function() {
-        console.log("timeupdate");
-      });
+      audio.addEventListener("play", self.sendJson);
     },
     //取消设置监听器
     cancleEventListener: function() {
+      var self = this;
       var audio = document.getElementsByTagName("audio")[0];
       //seeked在跳跃操作完成时触发。
-      audio.removeEventListener("seekd", function() {
-        console.log("发生跳跃操作");
-      });
+      audio.removeEventListener("seekd", self.sendJson);
       //pause在暂停的时候触发
-      audio.removeEventListener("pause", function() {
-        console.log("pause");
-      });
+      audio.removeEventListener("pause", self.sendJson);
       //canplay在媒体数据已经有足够的数据（至少播放数帧）可供播放时触发
-      audio.removeEventListener("canplay", function() {
-        console.log("canplay");
-      });
-      //ended播放结束时触发。
-      audio.removeEventListener("ended", function() {
-        console.log("ended");
-      });
-      //error 在发生错误时触发。
-      audio.removeEventListener("error", function() {
-        console.log("error");
-      });
+      audio.removeEventListener("canplay", self.setplay);
       //play在媒体回放被暂停后再次开始时触发。
-      audio.removeEventListener("play", function() {
-        console.log("play");
-      });
+      audio.removeEventListener("play", self.sendJson);
       //pause在暂停的时候触发
-      audio.addEventListener("pause", function() {
-        console.log("pause");
-      });
-      //stalled在尝试获取媒体数据，但数据不可用时触发
-      audio.removeEventListener("stalled", function() {
-        console.log("stalled");
-      });
-      //timeupdate元素的currentTime属性表示的时间已经改变。
-      audio.removeEventListener("timeupdate", function() {
-        console.log("timeupdate");
-      });
+      audio.addEventListener("pause", self.sendJson);
     },
     //初始化数据
     initData: function(arr) {
       var self = this;
+      if (arr == undefined) {
+        //从内存中判断数据是否已经加载
+        if (self.musiclist != undefined) {
+          arr = self.musiclist;
+        } else {
+          return;
+        }
+      }
       this.music = arr[0];
       this.musiclist = arr;
       this.isGetDataComplete = true;
@@ -138,7 +88,7 @@ export default {
         cancelButtonClass: "btn btn-danger",
         buttonsStyling: false
       }).then(function(isConfirm) {
-        if (isConfirm.dismiss != 'cancel') {
+        if (isConfirm.dismiss != "cancel") {
           swal({
             title: "请输入链接地址",
             text: "请联系另一半提供地址",
@@ -154,45 +104,55 @@ export default {
               });
             }
           }).then(function(result) {
-            console.log(result)
-            axios
-              .get(result.value, {})
-              .then(function(response) {
-                var data = response.data;
-                data = eval("(" + data.params.data + ")").sync;
-                console.log(data)
-                if (data.listid != undefined) {
-                  swal({
-                    type: "success",
-                    html: "添加成功"
-                  });
-                  self.configurl = result.value;
-                  self.firstopen = false;
-                } else {
-                  swal({
-                    type: "error",
-                    html: "添加失败"
-                  });
-                  self.firstopen = true;
-                }
-              })
-              .catch(function(error) {});
+            if (result.dismiss == "overlay" || result.dismiss == "cancel") {
+              //说明没有选择
+              self.firstopen = true;
+              return;
+            } else {
+              axios
+                .get(result.value, {})
+                .then(function(response) {
+                  var data = response.data;
+                  data = eval("(" + data.params.data + ")").sync;
+                  console.log(data);
+                  if (data.listid != undefined) {
+                    swal({
+                      type: "success",
+                      html: "添加成功"
+                    });
+                    self.configurl = result.value;
+                    self.firstopen = false;
+                  } else {
+                    swal({
+                      type: "error",
+                      html: "添加失败"
+                    });
+                    self.firstopen = true;
+                  }
+                })
+                .catch(function(error) {});
+            }
           });
         } else {
-          console.log("点击了取消按钮")
+          console.log("点击了取消按钮");
           self.createJson();
-          
         }
       });
-
-      window.intervalObj = setInterval(function() {
-        console.log("定时器启动");
-        self.getJson();
-      }, 5 * 1000);
-      setTimeout(function() {/*  */
-        self.player = self.$refs.musicplayer.$children;
-        self.setEventListener();
-      }, 500);
+      //如果没有开屏.就不启动
+      if (!self.firstopen) {
+        this.intervalObj = setInterval(function() {
+          console.log("定时器启动");
+          self.getJson();
+        }, 5 * 1000);
+        setTimeout(function() {
+          /*  */
+          self.player = self.$refs.musicplayer.$children;
+          self.setEventListener();
+        }, 500);
+      }
+    },
+    setplay: function() {
+      this.$refs.musicplayer.play();
     },
     test: function() {
       // console.log(this.getPlayRandom());
@@ -299,8 +259,6 @@ export default {
               };
               temp++;
             });
-            // console.log(arr);
-
             self.initData(arr);
           } else {
             alert("歌单不存在");
@@ -348,7 +306,7 @@ export default {
     getJson: function() {
       console.log("准备获取数据");
       var self = this;
-      console.log(self.configurl)
+      console.log(self.configurl);
       axios
         .get(self.configurl, {})
         .then(function(response) {
@@ -500,7 +458,8 @@ export default {
       playstatus: "",
       //随机码
       random: "123",
-      pre_event_time: 0
+      pre_event_time: 0,
+      intervalObj: null
     };
   },
   mounted() {
@@ -519,7 +478,7 @@ export default {
     //取消所有的监听事件
     this.cancleEventListener();
     //取消定时器
-    clearInterval(window.intervalObj);
+    clearInterval(this.intervalObj);
   }
 };
 </script>
