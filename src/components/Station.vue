@@ -13,7 +13,7 @@ import swal from "sweetalert2";
 export default {
   data() {
     return {
-      songlistid: "http://0.0.0.0:8080/#/Music/ulnnu"
+      songlistid: ""
       // songlistid: "937224028"
     };
   },

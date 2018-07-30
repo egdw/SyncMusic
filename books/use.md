@@ -15,12 +15,12 @@
 分享恶搞大王的歌单《听歌专用》http://music.163.com/playlist/2339591623/2769317?userid=2769317 (@网易云音乐)<br/>
 其中的/playlist/2339591623/中的2339591623即为我们需要的歌单id
 # 怎么使用
-1. 输入歌单id.
+1. 输入歌单id或对方提供的邀请码.
 2. 点击开房
 3. 如果一切顺利会弹出需要您复制的地址
 4. 发送给好友
 
 # 问题反馈
-* 联系邮箱
-* 联系QQ
-* issue提问
+* 联系邮箱(请看Github资料)
+* 联系QQ(请看Github资料)
+* [issue提问](https://github.com/egdw/SyncMusic/issues)

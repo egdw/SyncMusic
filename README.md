@@ -2,26 +2,34 @@
 
 > 一款可以用于情侣之间远程同步听歌的软件
 
-## Build Setup
+## 前言
+因为和女友放假离的比较远,有时候想一起听歌的时候发现找遍市面上能想到的方法总是感觉不是很方便.所以萌生了自己制作一个可以同步音乐进度的软件.同时音乐数量又不能太少.服务器最好又不需要进行维护.所以选择了下面的方法.
+
+## 构建 流程
 
 ``` bash
-# install dependencies
+# 安装 依赖
 npm install
 
-# serve with hot reload at localhost:8080
+# 热启动 localhost:8080
 npm run dev
-
-# build for production with minification
-npm run build
-
-# build for production and view the bundle analyzer report
-npm run build --report
-
-# run e2e tests
-npm run e2e
-
-# run all tests
-npm test
 ```
 
-For a detailed explanation on how things work, check out the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
+## 想法
+首先我想打的是一个不需要任何自己搭建服务器使用简单方便的同步听歌.<br/>
+基于这个原因.我没有采用websocket作为数据同步的方式.采用了轮询的方式进行获取数据.<br/>
+相对而言数据量会变大但是实现的结果将会是一样的.
+
+## 流程
+### 开房流程
+输入歌单id -> imjad解析 -> 得到数据 -> 获取邀请链接 -> 渲染界面 -> 开启定时器 -> 定时提交修改和定时获取改变
+
+### 入房流程
+输入邀请码 -> myjson数据获取 -> 得到歌单id -> imjad解析 -> 得到数据 -> 获取邀请链接 -> 渲染界面 -> 开启定时器 -> 定时提交修改和定时获取
+
+## 需知
+仅供学习使用,请勿用于商业用途
+
+## 感谢
+* [api.imjad.cn提供的网易云音乐api](imjad.cn)
+* [myjson提供的json临时保存](http://myjson.com/)
