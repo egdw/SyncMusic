@@ -18,7 +18,7 @@ export default new Router({
       name: 'Index',
       component: Index
     },{
-      path:'/Music/:id',
+      path:'/Music/:configid',
       name:'Music',
       component : Music
     }

@@ -27,16 +27,67 @@ export default {
         });
       } else {
         if (this.songlistid.length <= 6) {
-         swal({
-          title: "错误！",
-          text: "不符合规范!",
-          type: "error",
-          confirmButtonText: "重新输入"
-        });
+          swal({
+            title: "错误！",
+            text: "不符合规范!",
+            type: "error",
+            confirmButtonText: "重新输入"
+          });
         } else {
-          this.$router.push("/Music/" + this.songlistid);
+          //后台进行房间的创建
+          this.createJson();
         }
       }
+    },
+    createJson: function() {
+      var self = this;
+      axios
+        .post("https://api.myjson.com/bins", {
+          params: {
+            data:
+              '{"sync":{"listid":"' +
+              self.songlistid +
+              '","time":"' +
+              "0" +
+              '","index":"' +
+              "-1" +
+              '","mode":"' +
+              "none" +
+              '","status":"' +
+              "true" +
+              '","updatetime":"' +
+              new Date().getTime() +
+              '"}}'
+          }
+        })
+        .then(function(response) {
+          //https://api.myjson.com/bins/s7wgy
+          if (response.data != null && response.data.uri != null) {
+            //获取的当前房间的配置信息
+            var uri = response.data.uri;
+            var index = uri.lastIndexOf("/");
+            if (index != -1) {
+              uri = uri.substr(index + 1);
+              self.$router.push("/Music/" + uri);
+            } else {
+              swal({
+                title: "创建房间失败！",
+                text: "请稍后再试!",
+                type: "error",
+                confirmButtonText: "了解"
+              });
+            }
+          }
+        })
+        .catch(function(error) {
+          console.log(error);
+          swal({
+            title: "创建房间失败！",
+            text: error,
+            type: "error",
+            confirmButtonText: "了解"
+          });
+        });
     }
   }
 };

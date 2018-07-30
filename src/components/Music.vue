@@ -53,90 +53,103 @@ export default {
       audio.addEventListener("ended", self.enddealy);
     },
     //初始化数据
-    initData: function(arr) {
+    initData: function() {
       var self = this;
-      if (arr == undefined) {
-        //从内存中判断数据是否已经加载
-        if (self.musiclist != undefined) {
-          arr = self.musiclist;
-        } else {
-          return;
-        }
-      }
-      this.music = arr[0];
-      this.musiclist = arr;
-      this.isGetDataComplete = true;
-      //隐藏开屏
-      //防止某些浏览器无法自动播放音乐.取消监听事件
-      document.removeEventListener("touchstart", function() {
-        function audioAutoPlay() {
-          var musicEle0 = document.getElementById("emitaudio");
-          musicEle0.play();
-        }
-        audioAutoPlay();
-      });
-      swal({
-        title: "开房还是加入?",
-        text: "邀请另一半或加入另一半?",
-        showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "我要加入",
-        cancelButtonText: "我是房主",
-        confirmButtonClass: "btn btn-success",
-        cancelButtonClass: "btn btn-danger",
-        buttonsStyling: false
-      }).then(function(isConfirm) {
-        if (isConfirm.dismiss != "cancel") {
-          swal({
-            title: "请输入链接地址",
-            text: "请联系另一半提供地址",
-            input: "text",
-            showCancelButton: true,
-            inputValidator: function(value) {
-              return new Promise(function(resolve, reject) {
-                if (value) {
-                  resolve();
+      axios
+        .get(self.configurl, {})
+        .then(function(response) {
+          var data = response.data;
+          data = eval("(" + data.params.data + ")").sync;
+          console.log(data);
+          if (data.listid != undefined) {
+         
+            console.log(data)
+            //获取歌单数据
+            axios
+              .get("https://api.imjad.cn/cloudmusic/", {
+                params: {
+                  id: data.listid,
+                  type: "playlist"
+                }
+              })
+              .then(function(response) {
+                console.log(response.data);
+                var data = response.data;
+                var temp = 0;
+                if (data.code == "200") {
+                  //进行数据处理
+                  //获取到播放列表
+                  var playlist = data.playlist;
+
+                  var tracks = playlist.tracks;
+                  var arr = new Array();
+                  tracks.forEach(element => {
+                    //歌曲标题
+                    var name = element.name;
+                    //歌曲id
+                    var id = element.id;
+                    //作家
+                    var artist = "未知";
+                    if (element.ar[0] != null && element.ar[0].name != null) {
+                      artist = element.ar[0].name;
+                    }
+                    //封面
+                    var pic_img = "";
+                    if (element.al != null && element.al.picUrl != null) {
+                      pic_img = element.al.picUrl;
+                    }
+                    //播放地址
+                    var url =
+                      "https://api.imjad.cn/cloudmusic/?type=song&raw=true&id=" +
+                      id;
+                    arr[temp] = {
+                      title: name,
+                      artist: artist,
+                      src: url,
+                      pic: pic_img
+                    };
+                    temp++;
+                  });
+
+                  self.music = arr[0];
+                  self.musiclist = arr;
+                  self.isGetDataComplete = true;
+                  //隐藏开屏
+                  //防止某些浏览器无法自动播放音乐.取消监听事件
+                  document.removeEventListener("touchstart", function() {
+                    function audioAutoPlay() {
+                      var musicEle0 = document.getElementById("emitaudio");
+                      musicEle0.play();
+                    }
+                    audioAutoPlay();
+                  });
+                    var host = window.location.host;
+                    var configid = self.$route.params.configid;
+                    host = host+"/Music/"+configid
+                     swal({
+                      type: "success",
+                      title:'复制下面的链接给好友打开即可连接',
+                      text: host,
+                      confirmButtonText: "复制完成"
+                    });
+
                 } else {
-                  reject("你需要输入一些东西");
+                  alert("歌单不存在");
+                  self.$route.push("/");
                 }
               });
-            }
-          }).then(function(result) {
-            if (result.dismiss == "overlay" || result.dismiss == "cancel") {
-              //说明没有选择
-              self.firstopen = true;
-              return;
-            } else {
-              axios
-                .get(result.value, {})
-                .then(function(response) {
-                  var data = response.data;
-                  data = eval("(" + data.params.data + ")").sync;
-                  console.log(data);
-                  if (data.listid != undefined) {
-                    swal({
-                      type: "success",
-                      html: "添加成功"
-                    });
-                    self.configurl = result.value;
-                    self.firstopen = false;
-                  } else {
-                    swal({
-                      type: "error",
-                      html: "添加失败"
-                    });
-                    self.firstopen = true;
-                  }
-                })
-                .catch(function(error) {});
-            }
-          });
-        } else {
-          console.log("点击了取消按钮");
-          self.createJson();
-        }
-      });
+            self.firstopen = false;
+          } else {
+            swal({
+              type: "error",
+              html: "获取数据失败"
+            });
+            self.firstopen = true;
+          }
+        })
+        .catch(function(error) {
+          self.$route.push("/");
+        });
       //如果没有开屏.就不启动
 
       if (self.firstopen != "false") {
@@ -150,7 +163,7 @@ export default {
             setTimeout(function() {
               self.isEnd = false;
               //立即请求现在的数据
-              self.sendJson()
+              self.sendJson();
             }, 6000);
           }
         }, 5 * 1000);
@@ -208,106 +221,17 @@ export default {
     },
     //点击同意按钮时,触发无声的音乐和请求数据
     agree: function() {
-      console.log(this.$route.params.id);
       //初始化获取传递过来的参数
-      var id = this.$route.params.id;
-      if (id == undefined || id == "") {
+      console.log("click")
+      var configid = this.$route.params.configid;
+      console.log(configid)
+      if (configid == undefined || configid == "") {
         this.$route.push("/");
       }
-      this.songid = id;
+      //获取到配置文件地址
+      this.configurl = "https://api.myjson.com/bins/" + configid;
       //初始化数据
-      //可以开房了
-      var self = this;
-      if (self.musiclist != null) {
-        self.initData();
-        return;
-      }
-      axios
-        .get("https://api.imjad.cn/cloudmusic/", {
-          params: {
-            id: this.songid,
-            type: "playlist"
-          }
-        })
-        .then(function(response) {
-          console.log(response.data);
-          var data = response.data;
-          var temp = 0;
-          if (data.code == "200") {
-            //进行数据处理
-            //获取到播放列表
-            var playlist = data.playlist;
-
-            var tracks = playlist.tracks;
-            var arr = new Array();
-            tracks.forEach(element => {
-              //歌曲标题
-              var name = element.name;
-              //歌曲id
-              var id = element.id;
-              //作家
-              var artist = "未知";
-              if (element.ar[0] != null && element.ar[0].name != null) {
-                artist = element.ar[0].name;
-              }
-              //封面
-              var pic_img = "";
-              if (element.al != null && element.al.picUrl != null) {
-                pic_img = element.al.picUrl;
-              }
-              //播放地址
-              var url =
-                "https://api.imjad.cn/cloudmusic/?type=song&raw=true&id=" + id;
-              arr[temp] = {
-                title: name,
-                artist: artist,
-                src: url,
-                pic: pic_img
-              };
-              temp++;
-            });
-            self.initData(arr);
-          } else {
-            alert("歌单不存在");
-            self.$route.push("/");
-          }
-        });
-    },
-    //创建Json数据
-    createJson: function() {
-      var self = this;
-      axios
-        .post("https://api.myjson.com/bins", {
-          params: {
-            data:
-              '{"sync":{"listid":"' +
-              self.songid +
-              '","time":"' +
-              "0" +
-              '","index":"' +
-              "-1" +
-              '","mode":"' +
-              "none" +
-              '","status":"' +
-              "true" +
-              '","updatetime":"' +
-              new Date().getTime() +
-              '"}}'
-          }
-        })
-        .then(function(response) {
-          //https://api.myjson.com/bins/s7wgy
-          if (response.data != null && response.data.uri != null) {
-            //获取的当前房间的配置信息
-            var uri = response.data.uri;
-            self.configurl = uri;
-            swal("创建成功!请发送下面的地址给另一半", uri, "success");
-            self.firstopen = false;
-          }
-        })
-        .catch(function(error) {
-          console.log(error);
-        });
+      this.initData();
     },
     //获取返回的json数据
     getJson: function() {
@@ -378,8 +302,7 @@ export default {
                 if (second > 6 && self.isEnd == false) {
                   //如果已经大于六秒中还是和当前的播放歌曲不同的话
                   //那就进行切换歌曲的操作
-                  self.preSwitchTime = new Date().getTime()
-                  self.isEnd = true;
+                  self.preSwitchTime = new Date().getTime();
                   self.setPlayIndex(data.index);
                   if (self.getPlayStatus() != data.status) {
                     self.setPlayTime(realtime);
@@ -414,35 +337,30 @@ export default {
       if (self.pre_event_time == "" || self.pre_event_time == undefined) {
         self.pre_event_time = currenttime;
       } else {
-        //获取相差的时间
-        var time = (currenttime - self.pre_event_time) / 1000;
-        //只有事件间隔时长大于6秒的时候才会触发修改命令
-        if (time >= 3) {
-          self.pre_event_time = currenttime;
-          axios
-            .put(self.configurl, {
-              params: {
-                data:
-                  '{"sync":{"listid":"' +
-                  self.songid +
-                  '","time":"' +
-                  self.getPlayTime()[2] +
-                  '","index":"' +
-                  self.getPlayIndex() +
-                  '","mode":"' +
-                  self.getPlayMode() +
-                  '","status":"' +
-                  self.getPlayStatus() +
-                  '","updatetime":"' +
-                  new Date().getTime() +
-                  '"}}'
-              }
-            })
-            .then(function(response) {
-              console.log(response.data);
-            })
-            .catch(function(error) {});
-        }
+        self.pre_event_time = currenttime;
+        axios
+          .put(self.configurl, {
+            params: {
+              data:
+                '{"sync":{"listid":"' +
+                self.songid +
+                '","time":"' +
+                self.getPlayTime()[2] +
+                '","index":"' +
+                self.getPlayIndex() +
+                '","mode":"' +
+                self.getPlayMode() +
+                '","status":"' +
+                self.getPlayStatus() +
+                '","updatetime":"' +
+                new Date().getTime() +
+                '"}}'
+            }
+          })
+          .then(function(response) {
+            console.log(response.data);
+          })
+          .catch(function(error) {});
       }
     },
     //发送当前的状态
