@@ -1,6 +1,6 @@
 <template>
 <div id="search">
-  <div id="search_input_div"><input v-model="songlistid" type="number" placeholder="歌单id"><button @click="openroom">开房</button></div>
+  <div id="search_input_div"><input v-model="songlistid" type="text" placeholder="歌单id或邀请链接"><button @click="openroom">开房</button></div>
   <!-- <div id="search_tips"> -->
     <!-- <img src="/static/img/pic1.jpg" style="width:100%"/><center><span>歌单id去哪找?如上图所示</span></center> -->
   <!-- </div> -->
@@ -13,7 +13,8 @@ import swal from "sweetalert2";
 export default {
   data() {
     return {
-      songlistid: "937224028"
+      songlistid: "http://0.0.0.0:8080/#/Music/ulnnu"
+      // songlistid: "937224028"
     };
   },
   methods: {
@@ -41,52 +42,61 @@ export default {
     },
     createJson: function() {
       var self = this;
-      axios
-        .post("https://api.myjson.com/bins", {
-          params: {
-            data:
-              '{"sync":{"listid":"' +
-              self.songlistid +
-              '","time":"' +
-              "0" +
-              '","index":"' +
-              "-1" +
-              '","mode":"' +
-              "none" +
-              '","status":"' +
-              "true" +
-              '","updatetime":"' +
-              new Date().getTime() +
-              '"}}'
-          }
-        })
-        .then(function(response) {
-          if (response.data != null && response.data.uri != null) {
-            //获取的当前房间的配置信息
-            var uri = response.data.uri;
-            var index = uri.lastIndexOf("/");
-            if (index != -1) {
-              uri = uri.substr(index + 1);
-              self.$router.push("/Music/" + uri);
-            } else {
-              swal({
-                title: "创建房间失败！",
-                text: "请稍后再试!",
-                type: "error",
-                confirmButtonText: "了解"
-              });
+      console.log(self.songlistid)
+      console.log(self.songlistid.indexOf("Music"))
+      if (self.songlistid.indexOf("Music") != -1) {
+        //如果不等于-1的话那么就说明是链接
+        var index = self.songlistid.lastIndexOf("/") + 1;
+        var configid = self.songlistid.substr(index);
+        self.$router.push("/Music/" + configid);
+      } else {
+        axios
+          .post("https://api.myjson.com/bins", {
+            params: {
+              data:
+                '{"sync":{"listid":"' +
+                self.songlistid +
+                '","time":"' +
+                "0" +
+                '","index":"' +
+                "-1" +
+                '","mode":"' +
+                "none" +
+                '","status":"' +
+                "true" +
+                '","updatetime":"' +
+                new Date().getTime() +
+                '"}}'
             }
-          }
-        })
-        .catch(function(error) {
-          console.log(error);
-          swal({
-            title: "创建房间失败！",
-            text: error,
-            type: "error",
-            confirmButtonText: "了解"
+          })
+          .then(function(response) {
+            if (response.data != null && response.data.uri != null) {
+              //获取的当前房间的配置信息
+              var uri = response.data.uri;
+              var index = uri.lastIndexOf("/");
+              if (index != -1) {
+                uri = uri.substr(index + 1);
+                self.$router.push("/Music/" + uri);
+              } else {
+                swal({
+                  title: "创建房间失败！",
+                  text: "请稍后再试!",
+                  type: "error",
+                  confirmButtonText: "了解"
+                });
+              }
+            }
+          })
+          .catch(function(error) {
+            console.log(error);
+            swal({
+              title: "创建房间失败！",
+              text: error,
+              type: "error",
+              confirmButtonText: "了解"
+            });
           });
-        });
+      }
     }
   }
 };
