@@ -5,7 +5,6 @@
 
     <audio id="emitaudio" src="static/audio/emit.mp3">
       </audio>
-    <button @click="test">sdasda</button>
     <div id="HelloDiv"  v-if="firstopen">
       <div id="agereeButton" @click="agree">
         <span>开始使用</span>
@@ -19,7 +18,6 @@ import Aplayer from "vue-aplayer";
 Aplayer.disableVersionBadge = true;
 import axios from "axios";
 import swal from "sweetalert2";
-// import {addStatusOne} from '@/assets/js/databaseutils.js'
 export default {
   components: {
     Aplayer
@@ -139,7 +137,8 @@ export default {
         }
       });
       //如果没有开屏.就不启动
-      if (!self.firstopen) {
+
+      if (self.firstopen !="false") {
         this.intervalObj = setInterval(function() {
           console.log("定时器启动");
           self.getJson();
@@ -153,13 +152,6 @@ export default {
     },
     setplay: function() {
       this.$refs.musicplayer.play();
-    },
-    test: function() {
-      // console.log(this.getPlayRandom());
-      // Aplayer.play()
-      // this.player[2]._props.playIndex =
-      // addStatusOne("test","id","12312")
-      console.log(this.player[1]._props.stat);
     },
     setPlayTime(time) {
       var audio = document.getElementsByTagName("audio")[0];
@@ -317,23 +309,16 @@ export default {
             //说明数据没有初始化
             //说明当前播放的歌曲没有发生变化
             var othertime = parseFloat(data.time);
-            // console.log("服务器获取的时间为:"+othertime)
             //获取到总时长
             var totaltime = self.getPlayTime()[0];
-            // console.log("歌曲的总时长为:"+totaltime)
             var nowtime = self.getPlayTime()[2];
-            // console.log("正在播放的时间为:"+nowtime)
             //获取上一个用户更新前触发的时间
             var updatetime = parseFloat(data.updatetime);
-            // console.log("操作的时间为:"+updatetime)
             //大概计算出网络传输花了多长时间(秒)
             var ctime = new Date().getTime();
-            // console.log("当期ctime:"+ctime)
             var usingsecond = (new Date().getTime() - updatetime) / 1000;
-            // console.log("网络运输花费时间为:"+usingsecond)
             //获取修改用户当前应该播放的时间
             var realtime = othertime + usingsecond;
-            // console.log("真实的时间为 :"+realtime)
             if (
               data.index == self.playindex ||
               ((data.index == 0 && self.playindex == -1) ||
@@ -499,13 +484,13 @@ export default {
     text-align: center;
   }
 }
-
+//隐藏控制栏
 .hidden-controller {
   .aplayer-controller {
     visibility: hidden;
   }
 }
-
+//不隐藏控制栏
 .not-hidden-controller {
   .aplayer-controller {
     visibility;
