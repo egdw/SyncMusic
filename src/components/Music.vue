@@ -35,6 +35,7 @@ export default {
       audio.addEventListener("canplay", self.setplay);
       //play在媒体回放被暂停后再次开始时触发。
       audio.addEventListener("play", self.sendJson);
+      audio.addEventListener("ended", self.enddealy);
     },
     //取消设置监听器
     cancleEventListener: function() {
@@ -48,8 +49,8 @@ export default {
       audio.removeEventListener("canplay", self.setplay);
       //play在媒体回放被暂停后再次开始时触发。
       audio.removeEventListener("play", self.sendJson);
-      //pause在暂停的时候触发
-      audio.addEventListener("pause", self.sendJson);
+      //pause在停止的时候触发
+      audio.addEventListener("ended", self.enddealy);
     },
     //初始化数据
     initData: function(arr) {
@@ -138,17 +139,31 @@ export default {
       });
       //如果没有开屏.就不启动
 
-      if (self.firstopen !="false") {
+      if (self.firstopen != "false") {
+        var self = this;
         this.intervalObj = setInterval(function() {
           console.log("定时器启动");
-          self.getJson();
+          if (self.isEnd == false) {
+            self.getJson();
+          } else {
+            //如果是true的话延迟6秒等待跳转完成之后在进行操作.
+            setTimeout(function() {
+              self.isEnd = false;
+              //立即请求现在的数据
+              self.sendJson()
+            }, 6000);
+          }
         }, 5 * 1000);
         setTimeout(function() {
-          /*  */
           self.player = self.$refs.musicplayer.$children;
           self.setEventListener();
         }, 500);
       }
+    },
+    //结束延迟执行
+    enddealy: function() {
+      this.isEnd = true;
+      var self = this;
     },
     setplay: function() {
       this.$refs.musicplayer.play();
@@ -331,8 +346,8 @@ export default {
                 // return;
               } else {
                 //说明还可以播放
-                //如果误差差五秒以内不进行跳转
-                if (Math.abs(realtime - nowtime) >= 5) {
+                //如果误差差3秒以内不进行跳转
+                if (Math.abs(realtime - nowtime) >= 3) {
                   self.setPlayTime(realtime);
                 }
               }
@@ -349,17 +364,35 @@ export default {
                 }
               }
             } else {
-              self.setPlayIndex(data.index);
-              if (self.getPlayStatus() != data.status) {
-                self.setPlayTime(realtime);
-                if (data.status == "true") {
-                  self.$refs.musicplayer.play();
+              //这里由于网络传输存在延迟的问题,会导致反复切歌.
+              //由于没有主次的问题.导致上下会出现严重的卡歌问题.
+              //需要进行判断.
+              //解决方法:
+              //如果发现切歌进度不一样.这个时候不能立即进行切换.需要延时等待判断
+              //获取到现在的切换时间
+              if (self.preSwitchTime == null || self.preSwitchTime == "") {
+                self.preSwitchTime = new Date().getTime();
+              } else {
+                //算出经过的秒数
+                var second = (new Date().getTime() - self.preSwitchTime) / 1000;
+                if (second > 6 && self.isEnd == false) {
+                  //如果已经大于六秒中还是和当前的播放歌曲不同的话
+                  //那就进行切换歌曲的操作
+                  self.preSwitchTime = new Date().getTime()
+                  self.isEnd = true;
+                  self.setPlayIndex(data.index);
+                  if (self.getPlayStatus() != data.status) {
+                    self.setPlayTime(realtime);
+                    if (data.status == "true") {
+                      self.$refs.musicplayer.play();
+                    } else {
+                      self.$refs.musicplayer.pause();
+                    }
+                  }
                 } else {
-                  self.$refs.musicplayer.pause();
+                  self.$refs.musicplayer.play();
                 }
               }
-              //说明不相同了.
-              //更改数据
             }
           }
           sendJson();
@@ -428,7 +461,7 @@ export default {
       //获取数据是否完成
       isGetDataComplete: false,
       //控制器样式
-      controllerstyle: "hidden-controller",
+      controllerstyle: "not-hidden-controller",
       //是否是刚开屏
       firstopen: true,
       //配置文件地址
@@ -444,7 +477,8 @@ export default {
       //随机码
       random: "123",
       pre_event_time: 0,
-      intervalObj: null
+      intervalObj: null,
+      isEnd: false
     };
   },
   mounted() {
@@ -484,13 +518,15 @@ export default {
     text-align: center;
   }
 }
-//隐藏控制栏
+
+// 隐藏控制栏
 .hidden-controller {
   .aplayer-controller {
     visibility: hidden;
   }
 }
-//不隐藏控制栏
+
+// 不隐藏控制栏
 .not-hidden-controller {
   .aplayer-controller {
     visibility;
