@@ -60,10 +60,7 @@ export default {
         .then(function(response) {
           var data = response.data;
           data = eval("(" + data.params.data + ")").sync;
-          console.log(data);
           if (data.listid != undefined) {
-         
-            console.log(data)
             //获取歌单数据
             axios
               .get("https://api.imjad.cn/cloudmusic/", {
@@ -102,13 +99,17 @@ export default {
                     var url =
                       "https://api.imjad.cn/cloudmusic/?type=song&raw=true&id=" +
                       id;
-                    arr[temp] = {
-                      title: name,
-                      artist: artist,
-                      src: url,
-                      pic: pic_img
-                    };
-                    temp++;
+                    var copyright = element.copyright;
+                    //排除所有没有版权的歌
+                    if (copyright == 1) {
+                      arr[temp] = {
+                        title: name,
+                        artist: artist,
+                        src: url,
+                        pic: pic_img
+                      };
+                      temp++;
+                    }
                   });
 
                   self.music = arr[0];
@@ -123,16 +124,15 @@ export default {
                     }
                     audioAutoPlay();
                   });
-                    var host = window.location.host;
-                    var configid = self.$route.params.configid;
-                    host = host+"/Music/"+configid
-                     swal({
-                      type: "success",
-                      title:'复制下面的链接给好友打开即可连接',
-                      text: host,
-                      confirmButtonText: "复制完成"
-                    });
-
+                  var host = window.location.host;
+                  var configid = self.$route.params.configid;
+                  host = host + "/Music/" + configid;
+                  swal({
+                    type: "success",
+                    title: "复制下面的链接给好友打开即可连接",
+                    text: host,
+                    confirmButtonText: "复制完成"
+                  });
                 } else {
                   alert("歌单不存在");
                   self.$route.push("/");
@@ -155,7 +155,6 @@ export default {
       if (self.firstopen != "false") {
         var self = this;
         this.intervalObj = setInterval(function() {
-          console.log("定时器启动");
           if (self.isEnd == false) {
             self.getJson();
           } else {
@@ -222,9 +221,8 @@ export default {
     //点击同意按钮时,触发无声的音乐和请求数据
     agree: function() {
       //初始化获取传递过来的参数
-      console.log("click")
       var configid = this.$route.params.configid;
-      console.log(configid)
+      console.log(configid);
       if (configid == undefined || configid == "") {
         this.$route.push("/");
       }
@@ -379,11 +377,11 @@ export default {
       //获取数据是否完成
       isGetDataComplete: false,
       //控制器样式
-      controllerstyle: "not-hidden-controller",
+      controllerstyle: "hidden-controller",
       //是否是刚开屏
       firstopen: true,
       //配置文件地址
-      configurl: "https://api.myjson.com/bins/s7wgy",
+      configurl: "",
       //播放进度
       playtime: "",
       //播放索引
@@ -439,14 +437,26 @@ export default {
 
 // 隐藏控制栏
 .hidden-controller {
-  .aplayer-controller {
+  .aplayer-time {
+    .aplayer-icon {
+      visibility: hidden;
+    }
+  }
+
+  .aplayer-bar {
     visibility: hidden;
   }
 }
 
 // 不隐藏控制栏
 .not-hidden-controller {
-  .aplayer-controller {
+  .aplayer-time {
+    .aplayer-icon {
+      visibility;
+    }
+  }
+
+  .aplayer-bar {
     visibility;
   }
 }

@@ -61,7 +61,6 @@ export default {
           }
         })
         .then(function(response) {
-          //https://api.myjson.com/bins/s7wgy
           if (response.data != null && response.data.uri != null) {
             //获取的当前房间的配置信息
             var uri = response.data.uri;
