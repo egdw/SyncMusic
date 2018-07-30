@@ -430,7 +430,7 @@ export default {
 
   #agereeButton {
     font-size: 2rem;
-    margin-top: 30rem;
+    margin-top: 20rem;
     text-align: center;
   }
 }
