@@ -28,7 +28,7 @@ export default {
       var self = this;
       var audio = document.getElementsByTagName("audio")[0];
       //seeked在跳跃操作完成时触发。
-      audio.addEventListener("seekd", self.sendJson);
+      audio.addEventListener("seekd", self.seekfunction);
       //pause在暂停的时候触发
       audio.addEventListener("pause", self.sendJson);
       //canplay在媒体数据已经有足够的数据（至少播放数帧）可供播放时触发
@@ -42,7 +42,7 @@ export default {
       var self = this;
       var audio = document.getElementsByTagName("audio")[0];
       //seeked在跳跃操作完成时触发。
-      audio.removeEventListener("seekd", self.sendJson);
+      audio.removeEventListener("seekd", self.seekfunction);
       //pause在暂停的时候触发
       audio.removeEventListener("pause", self.sendJson);
       //canplay在媒体数据已经有足够的数据（至少播放数帧）可供播放时触发
@@ -55,101 +55,104 @@ export default {
     //初始化数据
     initData: function() {
       var self = this;
-      axios
-        .get(self.configurl, {})
-        .then(function(response) {
-          var data = response.data;
-          data = eval("(" + data.params.data + ")").sync;
-          if (data.listid != undefined) {
-            //获取歌单数据
-            axios
-              .get("https://api.imjad.cn/cloudmusic/", {
-                params: {
-                  id: data.listid,
-                  type: "playlist"
-                }
-              })
-              .then(function(response) {
-                console.log(response.data);
-                var data = response.data;
-                var temp = 0;
-                if (data.code == "200") {
-                  //进行数据处理
-                  //获取到播放列表
-                  var playlist = data.playlist;
+      axios.get(self.configurl, {}).then(function(response) {
+        var data = response.data;
+        data = eval("(" + data.params.data + ")").sync;
+        if (data.listid != undefined) {
+          //获取歌单数据
+          //修改为jsoup作为跨域请求
+          axios
+            .get("https://api.imjad.cn/cloudmusic/", {
+              params: {
+                id: data.listid,
+                type: "playlist"
+              }
+            })
+            .then(function(response) {
+              console.log(response.data);
+              var data = response.data;
+              var temp = 0;
+              if (data.code == "200") {
+                //进行数据处理
+                //获取到播放列表
+                var playlist = data.playlist;
 
-                  var tracks = playlist.tracks;
-                  var arr = new Array();
-                  tracks.forEach(element => {
-                    //歌曲标题
-                    var name = element.name;
-                    //歌曲id
-                    var id = element.id;
-                    //作家
-                    var artist = "未知";
-                    if (element.ar[0] != null && element.ar[0].name != null) {
-                      artist = element.ar[0].name;
-                    }
-                    //封面
-                    var pic_img = "";
-                    if (element.al != null && element.al.picUrl != null) {
-                      pic_img = element.al.picUrl;
-                    }
-                    //播放地址
-                    var url =
-                      "https://api.imjad.cn/cloudmusic/?type=song&raw=true&id=" +
-                      id;
-                    var copyright = element.copyright;
-                    //排除所有没有版权的歌
-                    if (copyright == 1) {
-                      arr[temp] = {
-                        title: name,
-                        artist: artist,
-                        src: url,
-                        pic: pic_img
-                      };
-                      temp++;
-                    }
-                  });
+                var tracks = playlist.tracks;
+                var arr = new Array();
+                tracks.forEach(element => {
+                  //歌曲标题
+                  var name = element.name;
+                  //歌曲id
+                  var id = element.id;
+                  //作家
+                  var artist = "未知";
+                  if (element.ar[0] != null && element.ar[0].name != null) {
+                    artist = element.ar[0].name;
+                  }
+                  //封面
+                  var pic_img = "";
+                  if (element.al != null && element.al.picUrl != null) {
+                    pic_img = element.al.picUrl;
+                  }
+                  //播放地址
+                  var url =
+                    "https://api.imjad.cn/cloudmusic/?type=song&raw=true&id=" +
+                    id;
+                  var copyright = element.copyright;
+                  //排除所有没有版权的歌
+                  if (copyright == 1) {
+                    arr[temp] = {
+                      title: name,
+                      artist: artist,
+                      src: url,
+                      pic: pic_img
+                    };
+                    temp++;
+                  }
+                });
 
-                  self.music = arr[0];
-                  self.musiclist = arr;
-                  self.isGetDataComplete = true;
-                  //隐藏开屏
-                  //防止某些浏览器无法自动播放音乐.取消监听事件
-                  document.removeEventListener("touchstart", function() {
-                    function audioAutoPlay() {
-                      var musicEle0 = document.getElementById("emitaudio");
-                      musicEle0.play();
-                    }
-                    audioAutoPlay();
-                  });
-                  var host = window.location.host;
-                  var configid = self.$route.params.configid;
-                  host = host + "/Music/" + configid;
-                  swal({
-                    type: "success",
-                    title: "复制下面的链接给好友打开即可连接",
-                    text: host,
-                    confirmButtonText: "复制完成"
-                  });
-                } else {
-                  alert("歌单不存在");
-                  self.$route.push("/");
-                }
+                self.music = arr[0];
+                self.musiclist = arr;
+                self.isGetDataComplete = true;
+                //隐藏开屏
+                //防止某些浏览器无法自动播放音乐.取消监听事件
+                document.removeEventListener("touchstart", function() {
+                  function audioAutoPlay() {
+                    var musicEle0 = document.getElementById("emitaudio");
+                    musicEle0.play();
+                  }
+                  audioAutoPlay();
+                });
+                var host = window.location.host;
+                var configid = self.$route.params.configid;
+                host = host + "/Music/" + configid;
+                swal({
+                  type: "success",
+                  title: "复制下面的链接给好友打开即可连接",
+                  text: host,
+                  confirmButtonText: "复制完成"
+                });
+                self.firstopen = false;
+              } else {
+                alert("歌单不存在");
+                self.$route.push("/");
+              }
+            })
+            .catch(function(error) {
+              swal({
+                type: "error",
+                html: "获取数据失败"
               });
-            self.firstopen = false;
-          } else {
-            swal({
-              type: "error",
-              html: "获取数据失败"
+              self.firstopen = true;
             });
-            self.firstopen = true;
-          }
-        })
-        .catch(function(error) {
-          self.$route.push("/");
-        });
+        } else {
+          swal({
+            type: "error",
+            html: "获取数据失败"
+          });
+          self.firstopen = true;
+        }
+      });
       //如果没有开屏.就不启动
 
       if (self.firstopen != "false") {
@@ -167,8 +170,14 @@ export default {
           }
         }, 5 * 1000);
         setTimeout(function() {
-          self.player = self.$refs.musicplayer.$children;
-          self.setEventListener();
+          //如果没有找到aplyer对象.则不执行监听器
+          if (
+            self.$refs.musicplayer != null &&
+            self.$refs.musicplayer != undefined
+          ) {
+            self.player = self.$refs.musicplayer.$children;
+            self.setEventListener();
+          }
         }, 500);
       }
     },
@@ -176,6 +185,9 @@ export default {
     enddealy: function() {
       this.isEnd = true;
       var self = this;
+    },
+    seekfunction:function(){
+      this.play()
     },
     setplay: function() {
       this.$refs.musicplayer.play();
@@ -233,9 +245,11 @@ export default {
     },
     //获取返回的json数据
     getJson: function() {
-      console.log("准备获取数据");
       var self = this;
       console.log(self.configurl);
+      if (self.musiclist == null || self.music == null) {
+        return;
+      }
       axios
         .get(self.configurl, {})
         .then(function(response) {
