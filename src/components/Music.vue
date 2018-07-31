@@ -2,14 +2,13 @@
   <div>
     <aplayer
       :music="music" preload="auto" :list="musiclist" ref="musicplayer" :class="controllerstyle" v-if="isGetDataComplete"/>
-
-    <audio id="emitaudio" src="static/audio/emit.mp3">
-      </audio>
     <div id="HelloDiv"  v-if="firstopen">
       <div id="agereeButton" @click="agree">
         <span>开始使用</span>
       </div>
     </div>
+    <audio id="emitaudio" src="static/audio/emit.mp3">
+      </audio>
   </div>
 </template>
 
@@ -42,7 +41,7 @@ export default {
       var self = this;
       var audio = document.getElementsByTagName("audio")[0];
       //seeked在跳跃操作完成时触发。
-      audio.removeEventListener("seekd", self.seekfunction);
+      audio.removeEventListener("seekd", self.sendJson);
       //pause在暂停的时候触发
       audio.removeEventListener("pause", self.sendJson);
       //canplay在媒体数据已经有足够的数据（至少播放数帧）可供播放时触发
@@ -55,12 +54,12 @@ export default {
     //初始化数据
     initData: function() {
       var self = this;
-      axios.get(self.configurl, {}).then(function(response) {
+      axios.get(this.configurl, {}).then(function(response) {
         var data = response.data;
         data = eval("(" + data.params.data + ")").sync;
-        if (data.listid != undefined) {
+        self.songid = data.listid
+        if (data.listid != undefined && data.listid != "") {
           //获取歌单数据
-          //修改为jsoup作为跨域请求
           axios
             .get("https://api.imjad.cn/cloudmusic/", {
               params: {
@@ -69,7 +68,6 @@ export default {
               }
             })
             .then(function(response) {
-              console.log(response.data);
               var data = response.data;
               var temp = 0;
               if (data.code == "200") {
@@ -100,29 +98,23 @@ export default {
                     id;
                   var copyright = element.copyright;
                   //排除所有没有版权的歌
-                  if (copyright == 1) {
-                    arr[temp] = {
-                      title: name,
-                      artist: artist,
-                      src: url,
-                      pic: pic_img
-                    };
-                    temp++;
-                  }
+                  // if (copyright == 1) {
+                  arr[temp] = {
+                    title: name,
+                    artist: artist,
+                    src: url,
+                    pic: pic_img
+                  };
+                  temp++;
+                  // }
                 });
-
+                //设置当前的listid
                 self.music = arr[0];
                 self.musiclist = arr;
                 self.isGetDataComplete = true;
                 //隐藏开屏
                 //防止某些浏览器无法自动播放音乐.取消监听事件
-                document.removeEventListener("touchstart", function() {
-                  function audioAutoPlay() {
-                    var musicEle0 = document.getElementById("emitaudio");
-                    musicEle0.play();
-                  }
-                  audioAutoPlay();
-                });
+                document.removeEventListener("touchstart", self.touchendVoice);
                 var host = window.location.host;
                 var configid = self.$route.params.configid;
                 host = host + "/Music/" + configid;
@@ -132,65 +124,67 @@ export default {
                   text: host,
                   confirmButtonText: "复制完成"
                 });
-                self.firstopen = false;
+                self.startInterval();
               } else {
-                alert("歌单不存在");
+                swal({
+                  type: "error",
+                  html: "歌单不存在"
+                });
                 self.$route.push("/");
               }
             })
             .catch(function(error) {
               swal({
                 type: "error",
-                html: "获取数据失败"
+                html: "获取数据失败" + error
               });
-              self.firstopen = true;
+              self.isGetDataComplete = false;
             });
         } else {
           swal({
             type: "error",
             html: "获取数据失败"
           });
-          self.firstopen = true;
+          self.isGetDataComplete = false;
         }
       });
-      //如果没有开屏.就不启动
-
-      if (self.firstopen != "false") {
-        var self = this;
-        this.intervalObj = setInterval(function() {
-          if (self.isEnd == false) {
-            self.getJson();
-          } else {
-            //如果是true的话延迟6秒等待跳转完成之后在进行操作.
-            setTimeout(function() {
-              self.isEnd = false;
-              //立即请求现在的数据
-              self.sendJson();
-            }, 6000);
-          }
-        }, 5 * 1000);
-        setTimeout(function() {
-          //如果没有找到aplyer对象.则不执行监听器
-          if (
-            self.$refs.musicplayer != null &&
-            self.$refs.musicplayer != undefined
-          ) {
-            self.player = self.$refs.musicplayer.$children;
-            self.setEventListener();
-          }
-        }, 500);
-      }
     },
     //结束延迟执行
     enddealy: function() {
       this.isEnd = true;
-      var self = this;
     },
-    seekfunction:function(){
-      this.play()
+    //启动数据相关的定时器
+    startInterval: function() {
+      var self = this;
+      this.firstopen = false;
+      this.intervalObj = setInterval(function() {
+        if (self.isEnd == false) {
+          self.getJson();
+        } else {
+          //如果是true的话延迟6秒等待跳转完成之后在进行操作.
+          setTimeout(function() {
+            self.isEnd = false;
+            //立即请求现在的数据
+            self.sendJson();
+          }, 5000);
+        }
+      }, 5 * 1000);
+      setTimeout(function() {
+        //如果没有找到aplyer对象.则不执行监听器
+        if (
+          self.$refs.musicplayer != null &&
+          self.$refs.musicplayer != undefined
+        ) {
+          self.player = self.$refs.musicplayer.$children;
+          self.setEventListener();
+        } else {
+          console.log("没有找到musicplayer");
+        }
+      }, 500);
     },
     setplay: function() {
       this.$refs.musicplayer.play();
+      this.sendJson()
     },
     setPlayTime(time) {
       var audio = document.getElementsByTagName("audio")[0];
@@ -216,11 +210,10 @@ export default {
       return arr;
     },
     //获取播放模式 循环播放 暂停播放 单曲循环
-    getPlayMode: function() {
-      var internalRepeat = this.$refs.musicplayer.internalRepeat;
-      console.log(internalRepeat);
-      return internalRepeat;
-    },
+    // getPlayMode: function() {
+    //   var internalRepeat = this.$refs.musicplayer.internalRepeat;
+    //   return internalRepeat;
+    // },
     getPlayStatus: function() {
       return String(this.$refs.musicplayer.isPlaying);
     },
@@ -235,7 +228,7 @@ export default {
       //初始化获取传递过来的参数
       var configid = this.$route.params.configid;
       console.log(configid);
-      if (configid == undefined || configid == "") {
+      if (configid == undefined || configid == "" || configid == null) {
         this.$route.push("/");
       }
       //获取到配置文件地址
@@ -246,7 +239,6 @@ export default {
     //获取返回的json数据
     getJson: function() {
       var self = this;
-      console.log(self.configurl);
       if (self.musiclist == null || self.music == null) {
         return;
       }
@@ -256,7 +248,6 @@ export default {
           var data = response.data;
           data = eval("(" + data.params.data + ")").sync;
           if (data.updatetime != undefined) {
-            console.log("数据正确");
             //说明数据没有初始化
             //说明当前播放的歌曲没有发生变化
             var othertime = parseFloat(data.time);
@@ -271,10 +262,10 @@ export default {
             //获取修改用户当前应该播放的时间
             var realtime = othertime + usingsecond;
             if (
-              data.index == self.playindex ||
-              ((data.index == 0 && self.playindex == -1) ||
-                (data.index == -1 && self.playindex == 0))
+                (data.index == 0 && self.playindex == -1) ||
+                  (data.index == -1 && self.playindex == 0) ||(data.index == self.playindex)
             ) {
+              console.log("当前播放进度是一样")
               //说明当前播放进度是一样的
               if (realtime > totaltime) {
                 //说明已经播放完了.暂停当前.等待下次更新新的切换歌曲
@@ -294,9 +285,14 @@ export default {
               if (self.getPlayStatus() != data.status) {
                 self.setPlayTime(realtime);
                 if (data.status == "true") {
-                  self.$refs.musicplayer.play();
+                  if(self.getPlayStatus()=="false"){
+                    self.$refs.musicplayer.play();
+                  }
+                 
                 } else {
-                  self.$refs.musicplayer.pause();
+                  if(self.getPlayStatus()=="true"){
+                    self.$refs.musicplayer.pause();
+                  }
                 }
               }
             } else {
@@ -306,6 +302,7 @@ export default {
               //解决方法:
               //如果发现切歌进度不一样.这个时候不能立即进行切换.需要延时等待判断
               //获取到现在的切换时间
+              console.log("当前播放进度是不一样")
               if (self.preSwitchTime == null || self.preSwitchTime == "") {
                 self.preSwitchTime = new Date().getTime();
               } else {
@@ -330,54 +327,67 @@ export default {
               }
             }
           }
-          sendJson();
         })
-        .catch(function(error) {});
+        .catch(function(error) {
+          swal({
+            title:"请求异常",
+            text:error,
+            type:"error"
+          })
+        });
+        this.sendJson();
+
     },
     //修改json数据
     sendJson: function() {
+      if (
+        this.songid == "" ||
+        this.songid == undefined ||
+        this.songid == null
+      ) {
+        console.log("发现歌单id不存在!");
+        return;
+      }
       var self = this;
-      var pre_event_time = self.pre_event_time;
       //获取上次事件触发的时间
       self.playtime = self.getPlayTime()[2];
       self.playindex = self.getPlayIndex();
-      self.playmode = self.getPlayMode();
       self.playstatus = self.getPlayStatus();
       //说明是第一次触发事件
       //获取到当前的时间戳
       var currenttime = new Date().getTime();
-      if (self.pre_event_time == "" || self.pre_event_time == undefined) {
-        self.pre_event_time = currenttime;
-      } else {
-        self.pre_event_time = currenttime;
-        axios
-          .put(self.configurl, {
-            params: {
-              data:
-                '{"sync":{"listid":"' +
-                self.songid +
-                '","time":"' +
-                self.getPlayTime()[2] +
-                '","index":"' +
-                self.getPlayIndex() +
-                '","mode":"' +
-                self.getPlayMode() +
-                '","status":"' +
-                self.getPlayStatus() +
-                '","updatetime":"' +
-                new Date().getTime() +
-                '"}}'
-            }
-          })
-          .then(function(response) {
-            console.log(response.data);
-          })
-          .catch(function(error) {});
-      }
+      axios
+        .put(self.configurl, {
+          params: {
+            data:
+              '{"sync":{"listid":"' +
+              self.songid +
+              '","time":"' +
+              self.playtime +
+              '","index":"' +
+              self.playindex +
+              '","mode":"' +
+              'none' +
+              '","status":"' +
+              self.playstatus +
+              '","updatetime":"' +
+              currenttime +
+              '"}}'
+          }
+        })
+        .then(function(response) {
+          // console.log(response.data);
+        })
+        .catch(function(error) {});
     },
     //发送当前的状态
     sendCurrentJson: function() {
       this.getJson();
+    },
+    //接触屏幕触发监听事件
+    touchendVoice: function() {
+      var musicEle0 = document.getElementById("emitaudio");
+      musicEle0.play();
     }
   },
   data() {
@@ -413,13 +423,7 @@ export default {
   },
   mounted() {
     //防止某些浏览器无法自动播放音乐.取消监听事件
-    document.addEventListener("touchend", function() {
-      function audioAutoPlay() {
-        var musicEle0 = document.getElementById("emitaudio");
-        musicEle0.play();
-      }
-      audioAutoPlay();
-    });
+    document.addEventListener("touchend", this.touchendVoice);
     // 创建房间
     // this.createJson()
   },
@@ -457,9 +461,9 @@ export default {
     }
   }
 
-  .aplayer-bar {
-    visibility: hidden;
-  }
+  // .aplayer-bar {
+  //   visibility: hidden;
+  // }
 }
 
 // 不隐藏控制栏
@@ -470,8 +474,8 @@ export default {
     }
   }
 
-  .aplayer-bar {
-    visibility;
-  }
+  // .aplayer-bar {
+  //   visibility;
+  // }
 }
 </style>
