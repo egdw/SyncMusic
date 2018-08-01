@@ -279,7 +279,7 @@ export default {
               } else {
                 //说明还可以播放
                 //如果误差差3秒以内不进行跳转
-                if (Math.abs(realtime - nowtime) >= 3) {
+                if (Math.abs(realtime - nowtime) >= 6) {
                   self.setPlayTime(realtime);
                 }
               }
