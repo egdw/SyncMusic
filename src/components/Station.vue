@@ -42,12 +42,21 @@ export default {
     },
     createJson: function() {
       var self = this;
-      console.log(self.songlistid);
-      console.log(self.songlistid.indexOf("Music"));
+      //从分享恶搞大王创建的歌单「听歌专用」: http://music.163.com/playlist/2339591623/2769317/?userid=2769317 (来自@网易云音乐)提取数据
+      if(self.songlistid.indexOf("playlist/") != -1){
+        var patt1=new RegExp("playlist\/\\d*");
+        var arr = patt1.exec(self.songlistid)
+        var result = arr[0].replace("playlist/","")
+        self.songlistid = result
+      }
+      //从http://music.163.com/#/m/playlist?id=528585052提取数据
       if (self.songlistid.indexOf("id=") != -1) {
         var id = self.songlistid.substr(self.songlistid.indexOf("id=") + 3);
         console.log(id)
-        self.songlistid = id
+        var patt1=new RegExp("(id=)\\d*");
+        var arr = patt1.exec(self.songlistid)
+        var result = arr[0].replace("id=","")
+        self.songlistid = result
       }
       if (self.songlistid.indexOf("Music") != -1) {
         //如果不等于-1的话那么就说明是链接
