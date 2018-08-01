@@ -33,3 +33,4 @@ npm run dev
 ## 感谢
 * [api.imjad.cn提供的网易云音乐api](imjad.cn)
 * [myjson提供的json临时保存](http://myjson.com/)
+* [https://www.lylares.com/提供的网易云备用api接口](https://www.lylares.com/)
