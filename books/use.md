@@ -22,7 +22,7 @@
 类似恶搞大王的歌单《听歌专用》http://music.163.com/playlist/2339591623/2769317?userid=2769317 (@网易云音乐)<br/>
 5. 输入到本软件的首页中的输入框当中.自动解析id
 > 这里有演示图片.比较大.耐心等待
-![例如](https://github.com/egdw/temp_pic_upload/blob/master/ScreenRecording_08-01-2018-19-23-15.gif?raw=true)
+![例如](https://coding.net/api/share/image/49111e54-327e-4b0c-841e-93bb81eafacb)
 # 怎么使用
 ## 邀请码邀请(如果使用app,或者自建本地服务器)
 1. 输入歌单id或对方提供的邀请码.
