@@ -42,8 +42,13 @@ export default {
     },
     createJson: function() {
       var self = this;
-      console.log(self.songlistid)
-      console.log(self.songlistid.indexOf("Music"))
+      console.log(self.songlistid);
+      console.log(self.songlistid.indexOf("Music"));
+      if (self.songlistid.indexOf("id=") != -1) {
+        var id = self.songlistid.substr(self.songlistid.indexOf("id=") + 3);
+        console.log(id)
+        self.songlistid = id
+      }
       if (self.songlistid.indexOf("Music") != -1) {
         //如果不等于-1的话那么就说明是链接
         var index = self.songlistid.lastIndexOf("/") + 1;
