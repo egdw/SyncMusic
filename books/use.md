@@ -12,6 +12,7 @@
 2. 点击你喜欢的歌单
 3. 查看浏览器地址栏<br/>
 4. 发现类似https://music.163.com/#/playlist?id=427405658 <br/>
+![例如](https://github.com/egdw/temp_pic_upload/blob/master/pc-min.gif?raw=true)
 5. 输入到本软件的首页中的输入框当中.自动解析id
 ### 使用手机
 1. 手机打开网易云音乐

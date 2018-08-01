@@ -55,27 +55,21 @@ export default {
     initData: function() {
       var self = this;
       axios.get(this.configurl, {}).then(function(response) {
+        //lylares 请求方式
         var data = response.data;
         data = eval("(" + data.params.data + ")").sync;
-        self.songid = data.listid
+        self.songid = data.listid;
         if (data.listid != undefined && data.listid != "") {
-          //获取歌单数据
-          axios
-            .get("https://api.imjad.cn/cloudmusic/", {
-              params: {
-                id: data.listid,
-                type: "playlist"
-              }
-            })
-            .then(function(response) {
-              var data = response.data;
+           $.getJSON("https://api.lylares.com/netmusic/", {query:'playlist',id:data.listid},
+            function (data, textStatus, jqXHR) {
+              console.log(data)
+              // var data = response.data;
               var temp = 0;
               if (data.code == "200") {
                 //进行数据处理
                 //获取到播放列表
-                var playlist = data.playlist;
-
-                var tracks = playlist.tracks;
+                // var playlist = data.playlist;
+                var tracks = data.result.tracks;
                 var arr = new Array();
                 tracks.forEach(element => {
                   //歌曲标题
@@ -84,13 +78,13 @@ export default {
                   var id = element.id;
                   //作家
                   var artist = "未知";
-                  if (element.ar[0] != null && element.ar[0].name != null) {
-                    artist = element.ar[0].name;
+                  if (element.artists[0] != null && element.artists[0].name != null) {
+                    artist = element.artists[0].name;
                   }
                   //封面
                   var pic_img = "";
-                  if (element.al != null && element.al.picUrl != null) {
-                    pic_img = element.al.picUrl;
+                  if (element.album != null && element.album.picUrl != null) {
+                    pic_img = element.album.picUrl;
                   }
                   //播放地址
                   var url =
@@ -120,8 +114,12 @@ export default {
                 var configid = self.$route.params.configid;
                 host = host + "/Music/" + configid;
                 var hint = "复制下面的邀请链接给好友打开即可连接";
-                if(allhref.indexOf("localhost")==-1 || allhref.indexOf("0.0.0.0")==-1 || allhref.indexOf("127.0.0.1")==-1){
-                  hint = "复制下面的链接给好友输入到主页即可连接"
+                if (
+                  allhref.indexOf("localhost") == -1 ||
+                  allhref.indexOf("0.0.0.0") == -1 ||
+                  allhref.indexOf("127.0.0.1") == -1
+                ) {
+                  hint = "复制下面的链接给好友输入到主页即可连接";
                 }
                 swal({
                   type: "success",
@@ -137,14 +135,106 @@ export default {
                 });
                 self.$route.push("/");
               }
-            })
-            .catch(function(error) {
-              swal({
-                type: "error",
-                html: "获取数据失败" + error
-              });
-              self.isGetDataComplete = false;
-            });
+            }
+          );
+          //获取歌单数据
+          //imjad请求方式
+          // axios
+          //   .get("https://api.imjad.cn/cloudmusic/", {
+          //     params: {
+          //       id: data.listid,
+          //       type: "playlist"
+          //     }
+          //   })
+            //  axios
+            // .get("https://api.lylares.com/netmusic/", {
+            //   params: {
+            //     id: data.listid,
+            //     query: "playlist"
+            //   }
+            // })
+            // .then(function(response) {
+            //   var data = response.data;
+            //   var temp = 0;
+            //   if (data.code == "200") {
+            //     //进行数据处理
+            //     //获取到播放列表
+            //     var playlist = data.playlist;
+
+            //     var tracks = playlist.tracks;
+            //     var arr = new Array();
+            //     tracks.forEach(element => {
+            //       //歌曲标题
+            //       var name = element.name;
+            //       //歌曲id
+            //       var id = element.id;
+            //       //作家
+            //       var artist = "未知";
+            //       if (element.ar[0] != null && element.ar[0].name != null) {
+            //         artist = element.ar[0].name;
+            //       }
+            //       //封面
+            //       var pic_img = "";
+            //       if (element.al != null && element.al.picUrl != null) {
+            //         pic_img = element.al.picUrl;
+            //       }
+            //       //播放地址
+            //       var url =
+            //         "https://api.imjad.cn/cloudmusic/?type=song&raw=true&id=" +
+            //         id;
+            //       var copyright = element.copyright;
+            //       //排除所有没有版权的歌
+            //       // if (copyright == 1) {
+            //       arr[temp] = {
+            //         title: name,
+            //         artist: artist,
+            //         src: url,
+            //         pic: pic_img
+            //       };
+            //       temp++;
+            //       // }
+            //     });
+            //     //设置当前的listid
+            //     self.music = arr[0];
+            //     self.musiclist = arr;
+            //     self.isGetDataComplete = true;
+            //     //隐藏开屏
+            //     //防止某些浏览器无法自动播放音乐.取消监听事件
+            //     document.removeEventListener("touchstart", self.touchendVoice);
+            //     var host = window.location.host;
+            //     var allhref = window.location.href;
+            //     var configid = self.$route.params.configid;
+            //     host = host + "/Music/" + configid;
+            //     var hint = "复制下面的邀请链接给好友打开即可连接";
+            //     if (
+            //       allhref.indexOf("localhost") == -1 ||
+            //       allhref.indexOf("0.0.0.0") == -1 ||
+            //       allhref.indexOf("127.0.0.1") == -1
+            //     ) {
+            //       hint = "复制下面的链接给好友输入到主页即可连接";
+            //     }
+            //     swal({
+            //       type: "success",
+            //       title: hint,
+            //       text: allhref,
+            //       confirmButtonText: "复制完成"
+            //     });
+            //     self.startInterval();
+            //   } else {
+            //     swal({
+            //       type: "error",
+            //       html: "歌单不存在"
+            //     });
+            //     self.$route.push("/");
+            //   }
+            // })
+            // .catch(function(error) {
+            //   swal({
+            //     type: "error",
+            //     html: "获取数据失败" + error
+            //   });
+            //   self.isGetDataComplete = false;
+            // });
         } else {
           swal({
             type: "error",
@@ -189,7 +279,7 @@ export default {
     },
     setplay: function() {
       this.$refs.musicplayer.play();
-      this.sendJson()
+      this.sendJson();
     },
     setPlayTime(time) {
       var audio = document.getElementsByTagName("audio")[0];
@@ -267,8 +357,9 @@ export default {
             //获取修改用户当前应该播放的时间
             var realtime = othertime + usingsecond;
             if (
-                (data.index == 0 && self.playindex == -1) ||
-                  (data.index == -1 && self.playindex == 0) ||(data.index == self.playindex)
+              (data.index == 0 && self.playindex == -1) ||
+              (data.index == -1 && self.playindex == 0) ||
+              data.index == self.playindex
             ) {
               // console.log("当前播放进度是一样")
               //说明当前播放进度是一样的
@@ -290,12 +381,11 @@ export default {
               if (self.getPlayStatus() != data.status) {
                 self.setPlayTime(realtime);
                 if (data.status == "true") {
-                  if(self.getPlayStatus()=="false"){
+                  if (self.getPlayStatus() == "false") {
                     self.$refs.musicplayer.play();
                   }
-                 
                 } else {
-                  if(self.getPlayStatus()=="true"){
+                  if (self.getPlayStatus() == "true") {
                     self.$refs.musicplayer.pause();
                   }
                 }
@@ -335,13 +425,12 @@ export default {
         })
         .catch(function(error) {
           swal({
-            title:"请求异常",
-            text:error,
-            type:"error"
-          })
+            title: "请求异常",
+            text: error,
+            type: "error"
+          });
         });
-        this.sendJson();
-
+      this.sendJson();
     },
     //修改json数据
     sendJson: function() {
@@ -372,7 +461,7 @@ export default {
               '","index":"' +
               self.playindex +
               '","mode":"' +
-              'none' +
+              "none" +
               '","status":"' +
               self.playstatus +
               '","updatetime":"' +
@@ -465,10 +554,6 @@ export default {
       visibility: hidden;
     }
   }
-
-  // .aplayer-bar {
-  //   visibility: hidden;
-  // }
 }
 
 // 不隐藏控制栏
@@ -478,9 +563,5 @@ export default {
       visibility;
     }
   }
-
-  // .aplayer-bar {
-  //   visibility;
-  // }
 }
 </style>

@@ -8,13 +8,20 @@ function resolve (dir) {
   return path.join(__dirname, '..', dir)
 }
 
-
+var webpack = require("webpack");
 
 module.exports = {
   context: path.resolve(__dirname, '../'),
   entry: {
     app: './src/main.js'
   },
+  plugins: [// 3. 配置全局使用 jquery
+    new webpack.ProvidePlugin({
+    $: "jquery",
+    jQuery: "jquery",
+    jquery: "jquery",
+    "window.jQuery": "jquery"
+  })],
   output: {
     path: config.build.assetsRoot,
     filename: '[name].js',
