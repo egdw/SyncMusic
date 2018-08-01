@@ -1,9 +1,9 @@
 <template>
 <div id="search">
-  <div id="search_input_div"><input v-model="songlistid" type="text" placeholder="歌单id或邀请链接"><button @click="openroom">开房</button></div>
-  <!-- <div id="search_tips"> -->
-    <!-- <img src="/static/img/pic1.jpg" style="width:100%"/><center><span>歌单id去哪找?如上图所示</span></center> -->
-  <!-- </div> -->
+  <div id="search_input_div"><input v-model="songlistid" type="text" placeholder="歌单id或邀请链接"><button @click="openroom">开始</button></div>
+  <div id="search_tips">
+    <center><a href="https://github.com/egdw/SyncMusic/blob/master/books/use.md">如何使用?软件错误?提意见?软件失效?点击这里.</a></center>
+  </div>
 </div>
 </template>
 

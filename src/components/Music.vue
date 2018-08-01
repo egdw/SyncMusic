@@ -116,12 +116,17 @@ export default {
                 //防止某些浏览器无法自动播放音乐.取消监听事件
                 document.removeEventListener("touchstart", self.touchendVoice);
                 var host = window.location.host;
+                var allhref = window.location.href;
                 var configid = self.$route.params.configid;
                 host = host + "/Music/" + configid;
+                var hint = "复制下面的邀请链接给好友打开即可连接";
+                if(allhref.indexOf("localhost")==-1 || allhref.indexOf("0.0.0.0")==-1 || allhref.indexOf("127.0.0.1")==-1){
+                  hint = "复制下面的链接给好友输入到主页即可连接"
+                }
                 swal({
                   type: "success",
-                  title: "复制下面的链接给好友打开即可连接",
-                  text: host,
+                  title: hint,
+                  text: allhref,
                   confirmButtonText: "复制完成"
                 });
                 self.startInterval();
@@ -265,7 +270,7 @@ export default {
                 (data.index == 0 && self.playindex == -1) ||
                   (data.index == -1 && self.playindex == 0) ||(data.index == self.playindex)
             ) {
-              console.log("当前播放进度是一样")
+              // console.log("当前播放进度是一样")
               //说明当前播放进度是一样的
               if (realtime > totaltime) {
                 //说明已经播放完了.暂停当前.等待下次更新新的切换歌曲
@@ -279,9 +284,9 @@ export default {
                 }
               }
               //如果暂停了.那么我也暂停.如果播放了.我也从可以播放的地方开始播放
-              console.log(
-                "状态是否想同:" + self.getPlayStatus() != data.status
-              );
+              // console.log(
+              //   "状态是否想同:" + self.getPlayStatus() != data.status
+              // );
               if (self.getPlayStatus() != data.status) {
                 self.setPlayTime(realtime);
                 if (data.status == "true") {
@@ -302,7 +307,7 @@ export default {
               //解决方法:
               //如果发现切歌进度不一样.这个时候不能立即进行切换.需要延时等待判断
               //获取到现在的切换时间
-              console.log("当前播放进度是不一样")
+              // console.log("当前播放进度是不一样")
               if (self.preSwitchTime == null || self.preSwitchTime == "") {
                 self.preSwitchTime = new Date().getTime();
               } else {

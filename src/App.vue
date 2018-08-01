@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <div id="nav">
-     <div class="nav_title">音乐同步播放<span class="nav_desc">by:恶搞大王</span></div>
+     <div class="nav_title">音乐同步播放<span class="nav_desc">by:恶搞大王(吾爱破解首发)</span></div>
     </div>
     <router-view/>
   </div>
@@ -33,9 +33,9 @@ export default {
 
   .nav_desc {
     line-height: 2.44rem;
-    font-size: 0.1rem;
+    font-size: 0.2rem;
     padding-left: 0.1rem;
-    color: rgba(220, 220, 220, 0.5);
+    color: white;
   }
 }
 </style>
