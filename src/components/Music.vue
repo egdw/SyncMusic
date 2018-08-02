@@ -113,11 +113,11 @@ export default {
                 var allhref = window.location.href;
                 var configid = self.$route.params.configid;
                 host = host + "/Music/" + configid;
-                var hint = "复制下面的邀请链接给好友打开即可连接";
+                var hint = "复制下面的邀请链接发送给好友打开即可开始一起欣赏美妙的音乐";
                 if (
-                  allhref.indexOf("localhost") == -1 ||
-                  allhref.indexOf("0.0.0.0") == -1 ||
-                  allhref.indexOf("127.0.0.1") == -1
+                  allhref.indexOf("localhost") != -1 ||
+                  allhref.indexOf("0.0.0.0") != -1 ||
+                  allhref.indexOf("127.0.0.1") != -1
                 ) {
                   hint = "复制下面的链接给好友输入到主页即可连接";
                 }
