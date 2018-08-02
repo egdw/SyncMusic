@@ -263,7 +263,7 @@ export default {
             self.sendJson();
           }, 5000);
         }
-      }, 5 * 1000);
+      }, 3 * 1000);
       setTimeout(function() {
         //如果没有找到aplyer对象.则不执行监听器
         if (
@@ -370,7 +370,7 @@ export default {
               } else {
                 //说明还可以播放
                 //如果误差差3秒以内不进行跳转
-                if (Math.abs(realtime - nowtime) >= 6) {
+                if (Math.abs(realtime - nowtime) >= 5) {
                   self.setPlayTime(realtime);
                 }
               }
@@ -408,8 +408,8 @@ export default {
                   //那就进行切换歌曲的操作
                   self.preSwitchTime = new Date().getTime();
                   self.setPlayIndex(data.index);
+                  self.setPlayTime(realtime);
                   if (self.getPlayStatus() != data.status) {
-                    self.setPlayTime(realtime);
                     if (data.status == "true") {
                       self.$refs.musicplayer.play();
                     } else {
@@ -430,7 +430,6 @@ export default {
             type: "error"
           });
         });
-      this.sendJson();
     },
     //修改json数据
     sendJson: function() {
@@ -444,12 +443,21 @@ export default {
       }
       var self = this;
       //获取上次事件触发的时间
+      var currenttime = new Date().getTime();
+      if(self.presendtime == null){
+          self.presendtime = currenttime
+      }else{
+        var spacetime = (currenttime-self.presendtime)/1000
+        if(spacetime<=2){
+           self.presendtime = currenttime
+           return;
+        }
+      }
       self.playtime = self.getPlayTime()[2];
       self.playindex = self.getPlayIndex();
       self.playstatus = self.getPlayStatus();
       //说明是第一次触发事件
       //获取到当前的时间戳
-      var currenttime = new Date().getTime();
       axios
         .put(self.configurl, {
           params: {
@@ -512,7 +520,8 @@ export default {
       random: "123",
       pre_event_time: 0,
       intervalObj: null,
-      isEnd: false
+      isEnd: false,
+      presendtime:null
     };
   },
   mounted() {
