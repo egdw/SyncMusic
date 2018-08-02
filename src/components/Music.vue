@@ -263,7 +263,7 @@ export default {
             self.sendJson();
           }, 5000);
         }
-      }, 3 * 1000);
+      }, 4 * 1000);
       setTimeout(function() {
         //如果没有找到aplyer对象.则不执行监听器
         if (
@@ -370,7 +370,7 @@ export default {
               } else {
                 //说明还可以播放
                 //如果误差差3秒以内不进行跳转
-                if (Math.abs(realtime - nowtime) >= 5) {
+                if (Math.abs(realtime - nowtime) >= 6) {
                   self.setPlayTime(realtime);
                 }
               }
