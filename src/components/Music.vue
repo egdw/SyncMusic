@@ -261,7 +261,7 @@ export default {
             self.isEnd = false;
             //立即请求现在的数据
             self.sendJson();
-          }, 5000);
+          }, 4000);
         }
       }, 4 * 1000);
       setTimeout(function() {
@@ -365,7 +365,7 @@ export default {
               //说明当前播放进度是一样的
               if (realtime > totaltime) {
                 //说明已经播放完了.暂停当前.等待下次更新新的切换歌曲
-                self.$refs.musicplayer.pause();
+                // self.$refs.musicplayer.pause();
                 // return;
               } else {
                 //说明还可以播放
@@ -386,7 +386,8 @@ export default {
                   }
                 } else {
                   if (self.getPlayStatus() == "true") {
-                    self.$refs.musicplayer.pause();
+                    self.$refs.musicplayer.play();
+                    // self.$refs.musicplayer.pause();
                   }
                 }
               }
@@ -413,7 +414,8 @@ export default {
                     if (data.status == "true") {
                       self.$refs.musicplayer.play();
                     } else {
-                      self.$refs.musicplayer.pause();
+                      self.$refs.musicplayer.play();
+                      // self.$refs.musicplayer.pause();
                     }
                   }
                 } else {
@@ -430,6 +432,7 @@ export default {
             type: "error"
           });
         });
+        sendJson()
     },
     //修改json数据
     sendJson: function() {
