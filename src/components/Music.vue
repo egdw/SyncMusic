@@ -87,9 +87,11 @@ export default {
                     pic_img = element.album.picUrl;
                   }
                   //播放地址
-                  var url =
-                    "https://api.imjad.cn/cloudmusic/?type=song&raw=true&id=" +
-                    id;
+                  // https://api.paugram.com/netease/?play=true&id=517567145
+                  // var url =
+                  //   "https://api.imjad.cn/cloudmusic/?type=song&raw=true&id=" +
+                  //   id;
+                  var url = "https://api.paugram.com/netease/?play=true&id="+id
                   var copyright = element.copyright;
                   //排除所有没有版权的歌
                   // if (copyright == 1) {
@@ -432,7 +434,7 @@ export default {
             type: "error"
           });
         });
-        sendJson()
+        self.sendJson()
     },
     //修改json数据
     sendJson: function() {
