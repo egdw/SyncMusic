@@ -62,7 +62,8 @@ export default {
         //如果不等于-1的话那么就说明是链接
         var index = self.songlistid.lastIndexOf("/") + 1;
         var configid = self.songlistid.substr(index);
-        self.$router.push("/Music/" + configid);
+        //后面的/1代表当前是房主
+        self.$router.push("/Music/" + configid + "/1");
       } else {
         axios
           .post("https://api.myjson.com/bins", {
@@ -90,7 +91,7 @@ export default {
               var index = uri.lastIndexOf("/");
               if (index != -1) {
                 uri = uri.substr(index + 1);
-                self.$router.push("/Music/" + uri);
+                self.$router.push("/Music/" + uri+"/1");
               } else {
                 swal({
                   title: "创建房间失败！",
