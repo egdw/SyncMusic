@@ -60,17 +60,19 @@ export default {
         self.songid = data.listid;
         if (data.listid != undefined && data.listid != "") {
           $.getJSON(
-            "https://api.lylares.com/netmusic/",
-            { query: "playlist", id: data.listid },
+            "https://163.fczbl.vip/playlist/detail",
+            { id: data.listid },
             function(data, textStatus, jqXHR) {
               // var data = response.data;
+              console.log(data)
               var temp = 0;
               if (data.code == "200") {
                 //进行数据处理
                 //获取到播放列表
                 // var playlist = data.playlist;
-                var tracks = data.result.tracks;
+                var tracks = data.playlist.tracks;
                 var arr = new Array();
+                console.log(tracks);
                 tracks.forEach(element => {
                   //歌曲标题
                   var name = element.name;
@@ -79,15 +81,15 @@ export default {
                   //作家
                   var artist = "未知";
                   if (
-                    element.artists[0] != null &&
-                    element.artists[0].name != null
+                    element.ar[0] != null &&
+                    element.ar[0].name != null
                   ) {
-                    artist = element.artists[0].name;
+                    artist = element.ar[0].name;
                   }
                   //封面
                   var pic_img = "";
-                  if (element.album != null && element.album.picUrl != null) {
-                    pic_img = element.album.picUrl;
+                  if (element.al != null && element.al.picUrl != null) {
+                    pic_img = element.al.picUrl;
                   }
                   //播放地址
                   // https://api.paugram.com/netease/?play=true&id=517567145
